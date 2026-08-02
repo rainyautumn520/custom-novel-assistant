@@ -10,7 +10,7 @@
 
 技术选型遵循以下原则：
 
-1. **单一 Agent 全栈负责**：全部开发由 Codex Agent（模型后端：DeepSeek v4-flash）统一完成，不做多模型分工
+1. **单一 Agent 全栈负责**：全部开发由 Codex Agent（模型后端：deepseek-v4-flash）统一完成，不做多模型分工
 2. **MVP 优先简单**：v0.1 选择最简可行方案，架构预留扩展点
 3. **网文作者友好**：客户端打包为桌面应用，安装即用
 4. **本地优先**：核心创作数据存本地，AI 调用可选本地模型降级
@@ -19,7 +19,7 @@
 
 ## 2. 前端技术栈
 
-> 开发方式：Codex Agent（DeepSeek v4-flash）统一负责前端代码
+> 开发方式：Codex Agent（deepseek-v4-flash）统一负责前端代码
 
 | 层级 | 选型 | 版本 | 理由 |
 |------|------|------|------|
@@ -38,7 +38,7 @@
 | 候选 | 淘汰理由 |
 |------|----------|
 | Vue | React 生态更大，组件库更丰富，AI 生成样本更充足 |
-| Tauri | Rust 学习成本，DeepSeek 后端已用 Python，不引入第三语言 |
+| Tauri | Rust 学习成本，deepseek-v4-flash 后端已用 Python，不引入第三语言 |
 | Next.js | SSR 对桌面端无意义，纯 SPA 即可 |
 | Slate.js | API 频繁变动，CodeMirror 更稳定 |
 | Redux | 模板过多，Zustand 更简洁 |
@@ -47,11 +47,11 @@
 
 ## 3. 后端技术栈
 
-> 开发方式：Codex Agent（DeepSeek v4-flash）统一负责后端代码
+> 开发方式：Codex Agent（deepseek-v4-flash）统一负责后端代码
 
 | 层级 | 选型 | 版本 | 理由 |
 |------|------|------|------|
-| 语言 | Python | >=3.12 | DeepSeek 对 Python 代码生成质量最高 |
+| 语言 | Python | >=3.12 | deepseek-v4-flash 对 Python 代码生成质量高 |
 | Web 框架 | FastAPI | ^0.115 | 异步原生，自动 OpenAPI 文档，Pydantic 集成 |
 | 数据校验 | Pydantic v2 | ^2.x | FastAPI 原生集成，性能优异 |
 | ORM | SQLAlchemy 2.0 | ^2.x | 异步支持，迁移工具 Alembic |
@@ -60,7 +60,7 @@
 | 迁移工具 | Alembic | latest | SQLAlchemy 官方迁移工具 |
 | 向量数据库 | ChromaDB | ^0.5 | 轻量嵌入，Python 原生，无需额外服务 |
 | AI 编排 | LangChain | ^0.3 | 生态最大，Agent/RAG 抽象成熟 |
-| 本地模型 | Ollama | latest | 离线降级，可选 DeepSeek 本地模型 |
+| 本地模型 | Ollama | latest | 离线降级备用；默认统一使用 deepseek-v4-flash |
 | 任务队列 | Celery + Redis | latest | Agent 异步任务编排（v0.3+） |
 
 ### 为什么不选
@@ -79,11 +79,11 @@
 
 | 层级 | 选型 | 用途 |
 |------|------|------|
-| 规划/架构/Review | DeepSeek v4-flash（经 Codex） | PRD、架构设计、代码审查，全栈统一 |
-| 后端/RAG/Agent | DeepSeek v4-flash（经 Codex） | 业务逻辑生成、RAG 检索、Agent 决策 |
-| 前端/UI 代码 | DeepSeek v4-flash（经 Codex） | 组件生成、样式实现、TypeScript 代码 |
+| 规划/架构/Review | deepseek-v4-flash（经 Codex） | PRD、架构设计、代码审查，全栈统一 |
+| 后端/RAG/Agent | deepseek-v4-flash（经 Codex） | 业务逻辑生成、RAG 检索、Agent 决策 |
+| 前端/UI 代码 | deepseek-v4-flash（经 Codex） | 组件生成、样式实现、TypeScript 代码 |
 | 本地嵌入 | BGE-M3 / text2vec | 中文优化，ChromaDB 本地向量化 |
-| 本地对话 | DeepSeek 本地模型 | Ollama 离线降级 |
+| 本地对话 | deepseek-v4-flash | Ollama 离线降级（备用） |
 
 ---
 

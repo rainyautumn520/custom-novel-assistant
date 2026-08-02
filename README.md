@@ -49,7 +49,7 @@ AI Novel IDE
 
 ## 技术栈
 
-全栈统一由 Codex Agent（模型后端：DeepSeek v4-flash）负责：
+全栈统一由 Codex Agent（模型后端：deepseek-v4-flash）负责：
 
 | 层 | 技术 |
 |----|------|

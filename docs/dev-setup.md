@@ -78,14 +78,14 @@ pip install -r requirements.txt
 ```bash
 # .env — API Keys
 
-# DeepSeek API (后端逻辑生成、RAG、Agent)
+# deepseek-v4-flash API (后端逻辑生成、RAG、Agent)
 DEEPSEEK_API_KEY=sk-your-key-here
 DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 
 
 # 本地 Ollama（可选，离线降级）
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=deepseek-r1:8b
+OLLAMA_MODEL=deepseek-v4-flash
 ```
 
 ---
@@ -172,7 +172,7 @@ alembic upgrade head            # 执行迁移
 # Windows: 从 https://ollama.com 下载安装包
 
 # 拉取模型
-ollama pull deepseek-r1:8b    # 本地降级测试（可选）
+# deepseek-v4-flash 为云端模型，无需本地拉取（如需离线降级，另行选择本地模型）
 ollama pull bge-m3            # 本地嵌入模型
 ```
 

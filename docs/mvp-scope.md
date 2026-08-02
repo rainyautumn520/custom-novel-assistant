@@ -93,7 +93,7 @@
 |------|----------|
 | 自动云备份 | SQLite + 手动导出 Markdown |
 | 实时协同 | 单用户本地文件 |
-| AI 训练/微调 | 现成 API（DeepSeek，经 Codex 调用） |
+| AI 训练/微调 | 现成 API（deepseek-v4-flash，经 Codex 调用） |
 | 插件市场 | 核心硬编码，架构预留扩展点 |
 | 权限系统 | 单用户即所有者 |
 
@@ -104,7 +104,7 @@
 | 风险 | 缓解措施 |
 |------|----------|
 | Electron 体积大 | MVP 可先用 localhost Web 版 |
-| AI API 成本高 | Ollama 本地模型降级 |
+| AI API 成本高 | 统一使用 deepseek-v4-flash，成本可控 |
 | 作者黏性低 | 阶段 0 沟通用户，阶段 5 可用性测试 |
 | 图谱性能下降 | 轻量 Canvas/SVG，避免重型图数据库 |
 

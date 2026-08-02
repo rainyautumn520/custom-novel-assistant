@@ -10,7 +10,7 @@
 
 技术选型遵循以下原则：
 
-1. **模型分工对齐**：每层技术栈对齐负责该层的 AI 模型擅长的语言和生态
+1. **单一 Agent 全栈负责**：全部开发由 Codex Agent（模型后端：DeepSeek v4-flash）统一完成，不做多模型分工
 2. **MVP 优先简单**：v0.1 选择最简可行方案，架构预留扩展点
 3. **网文作者友好**：客户端打包为桌面应用，安装即用
 4. **本地优先**：核心创作数据存本地，AI 调用可选本地模型降级
@@ -19,11 +19,11 @@
 
 ## 2. 前端技术栈
 
-> 负责模型：**Qwen2.5-Coder**（擅长前端、组件、UI、代码实现）
+> 开发方式：Codex Agent（DeepSeek v4-flash）统一负责前端代码
 
 | 层级 | 选型 | 版本 | 理由 |
 |------|------|------|------|
-| 语言 | TypeScript | ^5.x | 类型安全，Qwen2.5-Coder 对 TS 代码生成质量高 |
+| 语言 | TypeScript | ^5.x | 类型安全，生态成熟，AI 生成质量稳定 |
 | UI 框架 | React | ^19.x | 生态最大，组件库丰富，AI 训练数据充分 |
 | 桌面壳 | Electron | ^33.x | 跨平台打包（Win/Mac/Linux），Node.js 生态 |
 | 构建工具 | Vite | ^6.x | 极速 HMR，Electron 集成成熟 |
@@ -37,7 +37,7 @@
 
 | 候选 | 淘汰理由 |
 |------|----------|
-| Vue | React 生态更大，Qwen2.5-Coder 对 React/TS 代码生成更稳定 |
+| Vue | React 生态更大，组件库更丰富，AI 生成样本更充足 |
 | Tauri | Rust 学习成本，DeepSeek 后端已用 Python，不引入第三语言 |
 | Next.js | SSR 对桌面端无意义，纯 SPA 即可 |
 | Slate.js | API 频繁变动，CodeMirror 更稳定 |
@@ -47,7 +47,7 @@
 
 ## 3. 后端技术栈
 
-> 负责模型：**DeepSeek**（擅长后端、数据库、RAG、Agent 逻辑）
+> 开发方式：Codex Agent（DeepSeek v4-flash）统一负责后端代码
 
 | 层级 | 选型 | 版本 | 理由 |
 |------|------|------|------|
@@ -60,7 +60,7 @@
 | 迁移工具 | Alembic | latest | SQLAlchemy 官方迁移工具 |
 | 向量数据库 | ChromaDB | ^0.5 | 轻量嵌入，Python 原生，无需额外服务 |
 | AI 编排 | LangChain | ^0.3 | 生态最大，Agent/RAG 抽象成熟 |
-| 本地模型 | Ollama | latest | 离线降级，支持 Qwen/DeepSeek 等国产模型 |
+| 本地模型 | Ollama | latest | 离线降级，可选 DeepSeek 本地模型 |
 | 任务队列 | Celery + Redis | latest | Agent 异步任务编排（v0.3+） |
 
 ### 为什么不选
@@ -79,11 +79,11 @@
 
 | 层级 | 选型 | 用途 |
 |------|------|------|
-| 规划/架构/Review | GPT-4o / GPT-4.1 | PRD、架构设计、代码审查（产品负责人使用） |
-| 后端/RAG/Agent | DeepSeek-V3 / DeepSeek-R1 | 业务逻辑生成、RAG 检索、Agent 决策 |
-| 前端/UI 代码 | Qwen2.5-Coder-32B | 组件生成、样式实现、TypeScript 代码 |
+| 规划/架构/Review | DeepSeek v4-flash（经 Codex） | PRD、架构设计、代码审查，全栈统一 |
+| 后端/RAG/Agent | DeepSeek v4-flash（经 Codex） | 业务逻辑生成、RAG 检索、Agent 决策 |
+| 前端/UI 代码 | DeepSeek v4-flash（经 Codex） | 组件生成、样式实现、TypeScript 代码 |
 | 本地嵌入 | BGE-M3 / text2vec | 中文优化，ChromaDB 本地向量化 |
-| 本地对话 | Qwen2.5 / DeepSeek-V2 | Ollama 离线降级 |
+| 本地对话 | DeepSeek 本地模型 | Ollama 离线降级 |
 
 ---
 
@@ -91,7 +91,7 @@
 
 | 工具 | 用途 |
 |------|------|
-| VS Code / Cursor | 推荐 IDE |
+| Codex CLI / Codex 桌面版 | 唯一开发入口 |
 | ESLint + Prettier | 前端代码规范 |
 | Ruff | Python 代码规范（替代 Flake8 + isort） |
 | pytest | Python 测试框架 |
@@ -109,7 +109,7 @@
 | SQLite 并发写入瓶颈 | MVP 单用户无并发问题；v1.0 迁移 PostgreSQL |
 | AI API 延迟 | 流式输出（SSE），客户端乐观更新 |
 | 向量检索精度不足 | BGE-M3 中文优化 + 混合检索（BM25 + 向量） |
-| 三模型协作一致性 | Prompt 工程 + 结构化 JSON Schema 约束输出 |
+| AI 输出一致性 | Prompt 工程 + 结构化 JSON Schema 约束输出 |
 
 ---
 

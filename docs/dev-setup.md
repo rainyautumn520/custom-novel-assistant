@@ -21,13 +21,13 @@
 | 工具 | 用途 |
 |------|------|
 | Ollama | 本地 AI 模型运行（离线降级/开发测试） |
-| VS Code / Cursor | 推荐 IDE |
+| Codex CLI / Codex 桌面版 | 唯一开发入口 |
 
 ---
 
 ## 2. 推荐 IDE 与插件
 
-### VS Code / Cursor
+### Codex
 
 推荐的扩展列表（放入 .vscode/extensions.json）：
 
@@ -82,12 +82,10 @@ pip install -r requirements.txt
 DEEPSEEK_API_KEY=sk-your-key-here
 DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 
-# OpenAI API (产品规划、代码 Review)
-OPENAI_API_KEY=sk-your-key-here
 
 # 本地 Ollama（可选，离线降级）
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=qwen2.5:14b
+OLLAMA_MODEL=deepseek-r1:8b
 ```
 
 ---
@@ -174,8 +172,7 @@ alembic upgrade head            # 执行迁移
 # Windows: 从 https://ollama.com 下载安装包
 
 # 拉取模型
-ollama pull qwen2.5:14b       # 前端代码生成替代
-ollama pull deepseek-r1:8b    # 后端逻辑生成替代
+ollama pull deepseek-r1:8b    # 本地降级测试（可选）
 ollama pull bge-m3            # 本地嵌入模型
 ```
 
@@ -201,7 +198,7 @@ ollama pull bge-m3            # 本地嵌入模型
 | 代码规范 | 前端 ESLint + Prettier，后端 Ruff |
 | Commit 规范 | Conventional Commits (feat:, fix:, docs:, refactor:) |
 | 分支策略 | main (稳定) -> develop (开发) -> feat/* (功能分支) |
-| 代码审查 | 每个 PR 需经过 GPT Code Review |
+| 代码审查 | 每个 PR 需经过 Codex Agent 审查 |
 | 测试要求 | MVP 阶段：核心业务逻辑单元测试覆盖 >= 60% |
 
 ---

@@ -2,7 +2,7 @@
 
 > 面向网文作者的 AI 创作操作系统
 >
-> 融合 Obsidian 知识图谱 + Notion 资料管理 + Cursor AI 协作
+> 融合 Obsidian 知识图谱 + Notion 资料管理 + Codex AI 协作
 
 ---
 
@@ -25,7 +25,7 @@ AI Novel IDE 是一个专为网文作者设计的全流程创作工具。它将�
 
 - **Obsidian 的知识图谱**：人物、地点、事件以节点-边形式可视化，自由双向链接
 - **Notion 的资料管理**：世界观、角色卡、素材的结构化数据库，灵活检索
-- **Cursor 的 AI 协作**：上下文感知的智能补全、改写建议、一致性检查
+- **Codex 的 AI 协作**：上下文感知的智能补全、改写建议、一致性检查
 
 ---
 
@@ -49,14 +49,14 @@ AI Novel IDE
 
 ## 技术栈
 
-按三模型分工：
+全栈统一由 Codex Agent（模型后端：DeepSeek v4-flash）负责：
 
-| 层 | 技术 | 负责模型 |
-|----|------|----------|
-| 产品规划 / 架构 | — | GPT |
-| 前端 / UI | React + TypeScript + Electron | Qwen2.5-Coder |
-| 后端 / 数据库 / RAG / Agent | Python FastAPI + SQLite + ChromaDB + LangChain | DeepSeek |
-| 代码审查 | — | GPT |
+| 层 | 技术 |
+|----|------|
+| 产品规划 / 架构 | 文档驱动，Codex 规划与评审 |
+| 前端 / UI | React + TypeScript + Electron |
+| 后端 / 数据库 / RAG / Agent | Python FastAPI + SQLite + ChromaDB + LangChain |
+| 代码审查 | Codex 统一审查（不再多模型分工） |
 
 详见 [tech-stack.md](docs/tech-stack.md)
 
@@ -67,10 +67,10 @@ AI Novel IDE
 | 阶段 | 内容 | 文档产出 |
 |------|------|----------|
 | 阶段 0 | 明确 MVP 范围 + 创建项目文档 | 本文档套件 |
-| 阶段 1（已完成） | GPT 设计 PRD + 审核功能和页面结构 | PRD + 页面结构审核 |
-| 阶段 2 | DeepSeek 确定技术架构 + 检查扩展性 | 架构设计 |
+| 阶段 1（已完成） | Codex 设计 PRD + 审核功能和页面结构 | PRD + 页面结构审核 |
+| 阶段 2 | Codex 确定技术架构 + 检查扩展性 | 架构设计 |
 | 阶段 3 | 设计数据结构（小说/人物/世界观/章节/素材/关系） | 数据模型 |
-| 阶段 4 | 确定 UI 风格（Obsidian / Cursor / Notion 融合） | UI 设计稿 |
+| 阶段 4 | 确定 UI 风格（Obsidian / Codex / Notion 融合） | UI 设计稿 |
 | 阶段 5 | 分配开发任务 + 测试功能 + 记录 Bug | 迭代交付 |
 | 阶段 6 | 准备 RAG 测试数据 + 验证 AI 理解能力 | RAG 测试报告 |
 | 阶段 7 | 定义知识图谱关系 | 图谱设计 |

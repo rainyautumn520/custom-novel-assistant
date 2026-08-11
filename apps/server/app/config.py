@@ -21,7 +21,11 @@ class Settings(BaseSettings):
     vector_model: str = "BAAI/bge-small-zh-v1.5"  # 或 ollama 的 bge-m3
     ollama_base_url: str = "http://localhost:11434"
 
-    model_config = SettingsConfigDict(env_prefix="AI_NOVEL_")
+    model_config = SettingsConfigDict(
+        env_prefix="AI_NOVEL_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
 
 settings = Settings()

@@ -192,11 +192,18 @@ npm run build
 
 # 端到端（需先启动后端 8000 与前端 5173）
 node scripts/e2e-smoke.mjs
+
+# AI 能力真实联调（需 .env 已配置 DeepSeek Key，后端已启动）
+cd apps/server
+.\.venv\Scripts\python scripts\ai_smoke.py
 ```
 
 E2E 会播种一个测试项目，驱动本机 Edge：首页 → 设定 → 大纲（含拖拽）→ 正文（自动保存/
 任务书/审查/提交）→ 人物 → 导出 → 素材上传 → AI 讨论 → 封面工坊 → 图谱 → 节奏，
 并在 `prototype/` 输出截图。
+
+`ai_smoke.py` 会真实调用 DeepSeek 验证四条链路（任务书 / 续写 / 五维审查 / 设定讨论），
+全部返回并输出内容即通过；适合换 Key、换机器后自检。
 
 ### RAG 性能验收数据
 

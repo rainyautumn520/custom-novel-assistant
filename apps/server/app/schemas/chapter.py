@@ -2,36 +2,35 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
-class SettingCreate(BaseModel):
+class ChapterCreate(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     title: str = Field(min_length=1, max_length=200)
-    category_id: str | None = None
-    content_md: str = ""
-    tags: list[str] = []
-    status: str = "draft"
+    outline_node_id: str | None = None
 
 
-class SettingUpdate(BaseModel):
+class ChapterUpdate(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     title: str | None = None
-    category_id: str | None = None
     content_md: str | None = None
-    tags: list[str] | None = None
-    status: str | None = None
 
 
-class SettingOut(BaseModel):
+class ChapterOut(BaseModel):
     model_config = ConfigDict(
         from_attributes=True, alias_generator=to_camel, populate_by_name=True
     )
 
     id: str
-    category_id: str | None
     title: str
-    content_md: str
-    tags: list[str]
+    outline_node_id: str | None
+    word_count: int
+    file_path: str
+    file_hash: str
     status: str
     created_at: str
     updated_at: str
+
+
+class ChapterDetail(ChapterOut):
+    content_md: str = ""

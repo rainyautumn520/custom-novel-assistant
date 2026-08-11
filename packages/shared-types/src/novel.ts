@@ -88,6 +88,10 @@ export interface Chapter {
   updatedAt: string;
 }
 
+export interface ChapterDetail extends Chapter {
+  contentMd: string;
+}
+
 export interface ChapterSnapshot {
   id: string;
   chapterId: string;

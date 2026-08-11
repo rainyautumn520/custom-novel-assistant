@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Project } from '@ai-novel-ide/shared-types';
+
+import { api } from './api';
+import EditorPage from './pages/EditorPage';
+import OutlinePage from './pages/OutlinePage';
+import SettingsPage from './pages/SettingsPage';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
 
@@ -14,37 +19,26 @@ export default function App() {
   const [name, setName] = useState('');
   const [backend, setBackend] = useState<'checking' | 'ok' | 'fail'>('checking');
   const [activeNav, setActiveNav] = useState('概览');
-
-  const loadProjects = useCallback(async () => {
-    try {
-      const resp = await fetch(`${API_BASE}/api/projects`);
-      setProjects(await resp.json());
-    } catch {
-      setProjects([]);
-    }
-  }, []);
+  const [focusChapterId, setFocusChapterId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
       .then((r) => (r.ok ? setBackend('ok') : setBackend('fail')))
       .catch(() => setBackend('fail'));
-    void loadProjects();
-  }, [loadProjects]);
+    void api.listProjects().then(setProjects).catch(() => setProjects([]));
+  }, []);
 
   const createProject = async () => {
     if (!name.trim()) return;
-    const resp = await fetch(`${API_BASE}/api/projects`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name.trim() }),
-    });
-    if (resp.ok) {
-      const project: Project = await resp.json();
-      setSelected(project);
-      setName('');
-      setView('workspace');
-      await loadProjects();
-    }
+      const project = await api.createProject(name.trim());
+      if (project) {
+        setSelected(project);
+        setName('');
+        setActiveNav('概览');
+        setFocusChapterId(null);
+        setView('workspace');
+        await api.listProjects().then(setProjects).catch(() => undefined);
+      }
   };
 
   return (
@@ -92,11 +86,21 @@ export default function App() {
               onCreate={createProject}
               onOpen={(p) => {
                 setSelected(p);
+                setActiveNav('概览');
+                setFocusChapterId(null);
                 setView('workspace');
               }}
             />
           ) : (
-            <Workspace project={selected} nav={activeNav} />
+            <Workspace
+              project={selected}
+              nav={activeNav}
+              focusChapterId={focusChapterId}
+              onOpenChapter={(id) => {
+                setFocusChapterId(id);
+                setActiveNav('正文');
+              }}
+            />
           )}
         </main>
       </div>
@@ -164,12 +168,30 @@ function Home({
   );
 }
 
-function Workspace({ project, nav }: { project: Project | null; nav: string }) {
+function Workspace({
+  project,
+  nav,
+  focusChapterId,
+  onOpenChapter,
+}: {
+  project: Project | null;
+  nav: string;
+  focusChapterId: string | null;
+  onOpenChapter: (chapterId: string) => void;
+}) {
+  if (!project) return <div className="page-pad muted">未选择作品</div>;
+
+  if (nav === '设定') return <SettingsPage projectId={project.id} />;
+  if (nav === '大纲')
+    return <OutlinePage projectId={project.id} onOpenChapter={onOpenChapter} />;
+  if (nav === '正文')
+    return <EditorPage projectId={project.id} focusChapterId={focusChapterId} />;
+
   return (
     <div className="page-pad">
-      <h1>{project?.name ?? '作品'}</h1>
+      <h1>{project.name}</h1>
       <p className="muted">
-        当前模块：{nav}（骨架阶段，功能开发中。后端 API：/api/projects · /settings · /characters）
+        当前模块：{nav}（该模块开发中。已完成：设定 / 大纲 / 正文）
       </p>
       <div className="stats">
         <div className="stat"><div className="num">0</div><div className="lbl">总字数</div></div>

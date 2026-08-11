@@ -10,7 +10,7 @@ def test_project_crud_flow(client):
     assert resp.status_code == 201
     project = resp.json()
     assert project["name"] == "测试之书"
-    assert Path(project["data_dir"], "novel.db").exists()
+    assert Path(project["dataDir"], "novel.db").exists()
 
     # 列表包含新作品
     listed = client.get("/api/projects").json()

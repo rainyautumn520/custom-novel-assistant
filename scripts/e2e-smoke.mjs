@@ -1,0 +1,147 @@
+/**
+ * 端到端冒烟：驱动本机 Edge 操作真实前后端，输出截图。
+ * 前置：后端 http://localhost:8000、前端 http://localhost:5173 已启动。
+ * 用法：node scripts/e2e-smoke.mjs [输出目录]
+ */
+
+import { chromium } from 'playwright-core';
+import { mkdirSync } from 'node:fs';
+import path from 'node:path';
+
+const API = 'http://localhost:8000';
+const UI = 'http://localhost:5173';
+const OUT = path.resolve(process.argv[2] ?? 'prototype');
+mkdirSync(OUT, { recursive: true });
+
+const EDGE =
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+
+async function seed() {
+  const res = await fetch(`${API}/api/projects`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: '大梦山海', genre: '玄幻', target_words: 300000 }),
+  });
+  const project = await res.json();
+  const pid = project.id;
+
+  const post = (pathname, body) =>
+    fetch(`${API}/api/projects/${pid}${pathname}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+  const put = (pathname, body) =>
+    fetch(`${API}/api/projects/${pid}${pathname}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+
+  const rules = await post('/categories', { name: '规则' });
+  await post('/categories', { name: '地理' });
+  await post('/settings', {
+    title: '灵气复苏',
+    category_id: rules.id,
+    content_md: '天元历 1024 年，灵气复苏开始，每十年灵气浓度翻倍。',
+    tags: ['核心规则'],
+    status: 'confirmed',
+  });
+  await post('/settings', {
+    title: '天元大陆',
+    content_md: '五域分立的中央大陆，北境灵脉是复苏源头。',
+    tags: ['地理'],
+    status: 'confirmed',
+  });
+
+  const volume = await post('/outline', {
+    level: 'volume',
+    title: '第一卷 · 灵起',
+    goal: '主角离开灵脉村，进入天元学宫。',
+  });
+  const ch1 = await post('/outline', {
+    level: 'chapter',
+    parent_id: volume.id,
+    title: '第 1 章 · 觉醒',
+    target_words: 2500,
+  });
+  await post('/outline', {
+    level: 'chapter',
+    parent_id: volume.id,
+    title: '第 2 章 · 入城',
+    target_words: 2500,
+  });
+  const ch3 = await post('/outline', {
+    level: 'chapter',
+    parent_id: volume.id,
+    title: '第 3 章 · 初入天元',
+    goal: '完成学宫报到，与林晚重逢。',
+    must_cover: ['报到流程', '灵气复苏背景', '林晚重逢'],
+    forbidden: ['不揭示灵脉枯竭真相'],
+    target_words: 2500,
+    status: 'active',
+  });
+  await post('/outline', {
+    level: 'beat',
+    parent_id: ch3.id,
+    title: '学宫报到',
+  });
+  await post('/outline', {
+    level: 'beat',
+    parent_id: ch3.id,
+    title: '遇见林晚',
+  });
+
+  const chapter = await post(`/outline/${ch3.id}/create-chapter`, {});
+  await put(`/chapters/${chapter.id}`, {
+    content_md:
+      '晨雾还未散尽，天元学宫的牌楼已经遥遥在望。\n\n张小凡攥紧手里的报到文书，指节微微发白。牌楼下立着一个人——墨色长发，左腕一道浅色灵纹，正是林晚。\n\n"你迟到了。"林晚说。',
+  });
+  return project;
+}
+
+const browser = await chromium.launch({
+  executablePath: EDGE,
+  headless: true,
+});
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+page.on('pageerror', (e) => console.log('PAGE ERROR:', e.message));
+page.on('console', (m) => {
+  if (m.type() === 'error') console.log('CONSOLE ERROR:', m.text());
+});
+
+await seed();
+await page.goto(UI, { waitUntil: 'networkidle' });
+try {
+  await page.waitForSelector('.card', { timeout: 15000 });
+} catch (e) {
+  await page.screenshot({ path: path.join(OUT, 'preview-app-debug.png') });
+  console.log('URL:', page.url());
+  console.log('BODY HEAD:', (await page.content()).slice(0, 800));
+  throw e;
+}
+await page.screenshot({ path: path.join(OUT, 'preview-app-home.png') });
+
+await page.locator('.card').first().click();
+await page.waitForSelector('text=大梦山海');
+await page.screenshot({ path: path.join(OUT, 'preview-app-overview.png') });
+
+await page.getByRole('button', { name: '设定', exact: true }).click();
+await page.waitForSelector('text=灵气复苏');
+await page.screenshot({ path: path.join(OUT, 'preview-app-settings.png') });
+
+await page.getByRole('button', { name: '大纲', exact: true }).click();
+await page.waitForSelector('text=第一卷 · 灵起');
+await page.locator('.tree-item', { hasText: '第 3 章 · 初入天元' }).click();
+await page.screenshot({ path: path.join(OUT, 'preview-app-outline.png') });
+
+await page.getByRole('button', { name: '正文', exact: true }).click();
+await page.waitForSelector('.write-textarea');
+await page.locator('.write-textarea').fill(
+  '晨雾还未散尽，天元学宫的牌楼已经遥遥在望。\n\n张小凡抬起头，看见林晚立在牌楼下。',
+);
+await page.waitForSelector('text=已保存', { timeout: 10000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-editor.png') });
+
+console.log('E2E smoke passed, screenshots ->', OUT);
+await browser.close();

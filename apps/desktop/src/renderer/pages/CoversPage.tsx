@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CoverTask } from '@ai-novel-ide/shared-types';
 
-import { api } from '../api';
+import { API_BASE, api } from '../api';
 
-const SIZES = ['1024x1024', '768x1024', '1024x768', '512x768'];
+const SIZES = ['1920x1920', '2048x2048', '2880x1620'];
 
 export default function CoversPage({ projectId }: { projectId: string }) {
   const [tasks, setTasks] = useState<CoverTask[]>([]);
@@ -80,6 +80,13 @@ export default function CoversPage({ projectId }: { projectId: string }) {
           {tasks.map((t) => (
             <div key={t.id} className="cover-item">
               <div className="cover-prompt">{t.prompt}</div>
+              {t.status === 'success' && t.resultPath && (
+                <img
+                  className="cover-preview"
+                  src={`${API_BASE}/api/projects/${projectId}/covers/${t.id}/file`}
+                  alt={t.prompt}
+                />
+              )}
               <div className="cover-meta">
                 <span className={`badge ${t.status === 'failed' ? 'active' : t.status === 'success' ? 'done' : ''}`}>
                   {t.status === 'failed' ? '失败' : t.status === 'success' ? '成功' : t.status}

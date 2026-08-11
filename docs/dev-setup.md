@@ -171,11 +171,12 @@ AI_NOVEL_OLLAMA_BASE_URL=http://localhost:11434
 ```ini
 AI_NOVEL_SEEDREAM_API_KEY=xxxx
 AI_NOVEL_SEEDREAM_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-AI_NOVEL_SEEDREAM_MODEL=doubao-seedream-5-0
+AI_NOVEL_SEEDREAM_MODEL=doubao-seedream-5-0-260128
 ```
 
-> 注意：模型标识以火山方舟官方文档为准（ADR-05 待联调确认）。未配置时封面任务会
-> 如实标记 failed 并提示凭证缺失，不会静默失败。
+> 模型标识参考（2026-08）：`doubao-seedream-5-0-260128`（标准版）、
+> `doubao-seedream-5-0-lite-260128`（Lite）、`doubao-seedream-5-0-pro-260628`（Pro）。
+> 未配置时封面任务会如实标记 failed 并提示凭证缺失，不会静默失败。
 
 ---
 

@@ -13,6 +13,39 @@ def test_cover_task_registered(client):
     assert len(client.get(base).json()) == 1
 
 
+def test_cover_task_real_call_success(client, monkeypatch):
+    import base64
+
+    import httpx
+
+    from app.services.cover_service import settings
+
+    monkeypatch.setattr(settings, "seedream_api_key", "test-ark-key")
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"data": [{"b64_json": base64.b64encode(b"fake-png-bytes").decode()}]}
+
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: FakeResponse())
+
+    project = client.post("/api/projects", json={"name": "封面真实调用测试书"}).json()
+    base = f"/api/projects/{project['id']}/covers"
+    created = client.post(
+        base, json={"prompt": "云海仙山", "params": {"size": "1024x1024"}}
+    ).json()
+    assert created["status"] == "success"
+    assert created["resultPath"].endswith(".png")
+
+    download = client.get(f"{base}/{created['id']}/file")
+    assert download.status_code == 200
+    assert download.content == b"fake-png-bytes"
+
+
 def test_search_and_links(client):
     project = make_project(client, "检索测试书")
     pid = project["id"]

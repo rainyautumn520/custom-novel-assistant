@@ -30,9 +30,13 @@ desktop.ini
 
 # Local application data
 data/
+ai-novel-ide-data/
 *.db
 *.db-shm
 *.db-wal
 *.sqlite
 *.sqlite3
+
+# Electron build artifacts
+dist-electron/
 

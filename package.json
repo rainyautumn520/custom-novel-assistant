@@ -1,0 +1,18 @@
+{
+  "name": "ai-novel-ide",
+  "private": true,
+  "version": "0.4.0",
+  "description": "AI Novel IDE — 面向网文作者的 AI 创作操作系统",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:desktop": "npm run dev -w @ai-novel-ide/desktop",
+    "build:desktop": "npm run build -w @ai-novel-ide/desktop",
+    "build:shared": "npm run build -w @ai-novel-ide/shared-types",
+    "build": "npm run build -w @ai-novel-ide/shared-types && npm run build --workspaces --if-present",
+    "dev:server": "cd apps/server && .venv\\Scripts\\python -m uvicorn app.main:app --reload --port 8000",
+    "test:server": "cd apps/server && .venv\\Scripts\\python -m pytest"
+  }
+}

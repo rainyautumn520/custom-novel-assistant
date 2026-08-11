@@ -1,0 +1,115 @@
+:root {
+  --bg: #1b1b20;
+  --panel: #232329;
+  --panel-2: #2b2b33;
+  --border: #34343d;
+  --hover: #2f2f38;
+  --active: #3a3a45;
+  --text: #e8e8ec;
+  --text-2: #a0a0ac;
+  --text-3: #6f6f7a;
+  --accent: #7c6ff0;
+  --accent-hover: #8f84f5;
+  --success: #4caf7d;
+  --danger: #e05d5d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+input { font: inherit; color: inherit; }
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+.spacer { flex: 1; }
+
+.topbar {
+  height: 48px; flex: 0 0 48px;
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.logo-mark {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #4aa3ff);
+  display: grid; place-items: center; font-size: 12px; color: #fff;
+}
+.project-switch {
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px;
+}
+.search {
+  flex: 1; max-width: 420px; color: var(--text-3);
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px;
+}
+.backend { font-size: 12px; }
+.backend-ok { color: var(--success); }
+.backend-fail { color: var(--danger); }
+.backend-checking { color: var(--text-3); }
+
+.shell { flex: 1; display: flex; min-height: 0; }
+.sidebar {
+  width: 200px; flex: 0 0 200px;
+  background: var(--panel); border-right: 1px solid var(--border);
+  padding: 10px 8px; display: flex; flex-direction: column; gap: 2px;
+}
+.nav-item {
+  padding: 8px 10px; border-radius: 6px; color: var(--text-2);
+  text-align: left; font-size: 13.5px;
+}
+.nav-item:hover { background: var(--hover); color: var(--text); }
+.nav-item.active { background: var(--active); color: var(--text); }
+.main { flex: 1; min-width: 0; overflow: auto; }
+.page-pad { padding: 28px 32px; }
+.page-pad h1 { font-size: 22px; margin-bottom: 4px; }
+.muted { color: var(--text-2); margin-bottom: 18px; }
+.page-pad h2 { font-size: 13px; color: var(--text-3); font-weight: 500; margin: 22px 0 10px; }
+
+.create-box { display: flex; gap: 10px; max-width: 480px; }
+.create-box input {
+  flex: 1; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; outline: none;
+}
+.create-box input:focus { border-color: var(--accent); }
+.btn { border-radius: 6px; padding: 8px 14px; font-size: 13.5px; }
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent-hover); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; text-align: left;
+}
+.card:hover { border-color: var(--text-3); }
+.card .cover {
+  height: 90px; border-radius: 6px; margin-bottom: 10px;
+  background: linear-gradient(135deg, #2c3e67, #4aa3ff);
+}
+.card .name { font-weight: 600; }
+.card .sub { color: var(--text-2); font-size: 12px; margin-top: 2px; }
+
+.empty {
+  border: 1px dashed var(--text-3); border-radius: 8px;
+  padding: 28px; color: var(--text-2); text-align: center;
+}
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+.stat {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+}
+.stat .num { font-family: ui-monospace, Consolas, monospace; font-size: 22px; font-weight: 600; }
+.stat .lbl { color: var(--text-2); font-size: 12px; margin-top: 2px; }
+
+.statusbar {
+  height: 28px; flex: 0 0 28px;
+  display: flex; align-items: center; gap: 18px; padding: 0 16px;
+  background: var(--panel); border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-3);
+}

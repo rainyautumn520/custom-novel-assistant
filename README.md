@@ -71,7 +71,7 @@ AI Novel IDE
 | 阶段 2（已完成） | Codex 确定技术架构 + 检查扩展性 | 架构设计 + 技术决策记录 |
 | 阶段 3（已完成） | 设计数据结构（小说/人物/世界观/章节/素材/关系） | 数据模型 |
 | 阶段 4（已完成） | 确定 UI 风格（Obsidian / Codex / Notion 融合） | UI 设计稿 + 可点击原型 |
-| 阶段 5 | 分配开发任务 + 测试功能 + 记录 Bug | 迭代交付 |
+| 阶段 5（进行中） | 分配开发任务 + 测试功能 + 记录 Bug | monorepo 骨架 + 后端 API + 前端壳 |
 | 阶段 6 | 准备 RAG 测试数据 + 验证 AI 理解能力 | RAG 测试报告 |
 | 阶段 7 | 定义知识图谱关系 | 图谱设计 |
 | 阶段 8 | 定义 Agent 职责 | Agent 设计 |
@@ -106,20 +106,34 @@ Git
 
 # 克隆仓库
 git clone <repo-url>
-cd ai-novel-ide
+cd custom-novel-assistant
 
-# 前端
-cd apps/desktop
+# 安装前端依赖（npm workspaces，含 Electron）
 npm install
-npm run dev
 
 # 后端
 cd apps/server
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
+python -m venv .venv
+.\.venv\Scripts\pip install -r requirements.txt   # Windows
+source .venv/bin/pip install -r requirements.txt  # macOS/Linux
+
+# 一键启动（Windows）
+cd ../..
+powershell -ExecutionPolicy Bypass -File scripts/dev.ps1
+
+# 或分两个终端手动启动：
+# 终端 1：后端
+cd apps/server
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
+# 终端 2：前端（浏览器调试）
+cd ../..
+npm run dev:desktop
+# 终端 2 备选：Electron 桌面窗口
+npm run electron:dev -w @ai-novel-ide/desktop
 ```
 
-详见 [dev-setup.md](docs/dev-setup.md)
+验证：后端 API 文档 http://localhost:8000/docs；前端 http://localhost:5173。
+详见 [dev-setup.md](docs/dev-setup.md) 与 [project-structure.md](docs/project-structure.md)。
 
 ---
 

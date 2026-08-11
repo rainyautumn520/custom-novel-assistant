@@ -12,3 +12,4 @@ chromadb>=0.5,<2.0
 # 2) ollama（本地 bge-m3，vector_backend=ollama）
 sentence-transformers>=3.0,<5.0
 python-multipart>=0.0.9
+pillow>=10.0,<12.0

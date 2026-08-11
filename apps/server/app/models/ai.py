@@ -44,6 +44,7 @@ class CoverTask(NovelBase):
     status: Mapped[str] = mapped_column(String(16), default="queued")
     idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
     result_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    composed_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     error: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[str] = mapped_column(String(32), default=now_iso)
     updated_at: Mapped[str] = mapped_column(String(32), default=now_iso, onupdate=now_iso)

@@ -227,6 +227,11 @@ input { font: inherit; color: inherit; }
   max-width: 220px; max-height: 220px; border-radius: 6px;
   border: 1px solid var(--border); margin-bottom: 6px; display: block;
 }
+.compose-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.compose-row input {
+  flex: 1; min-width: 90px; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 9px; color: var(--text); outline: none; font-size: 12.5px;
+}
 .cover-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-3); }
 
 /* ---------- 拖拽与文件 ---------- */

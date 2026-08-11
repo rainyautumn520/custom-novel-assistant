@@ -81,11 +81,7 @@ export default function CoversPage({ projectId }: { projectId: string }) {
             <div key={t.id} className="cover-item">
               <div className="cover-prompt">{t.prompt}</div>
               {t.status === 'success' && t.resultPath && (
-                <img
-                  className="cover-preview"
-                  src={`${API_BASE}/api/projects/${projectId}/covers/${t.id}/file`}
-                  alt={t.prompt}
-                />
+                <CoverResult projectId={projectId} task={t} onChanged={load} />
               )}
               <div className="cover-meta">
                 <span className={`badge ${t.status === 'failed' ? 'active' : t.status === 'success' ? 'done' : ''}`}>
@@ -97,6 +93,47 @@ export default function CoversPage({ projectId }: { projectId: string }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CoverResult({
+  projectId,
+  task,
+  onChanged,
+}: {
+  projectId: string;
+  task: CoverTask;
+  onChanged: () => Promise<void>;
+}) {
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [busy, setBusy] = useState(false);
+  const src = task.composedPath
+    ? api.coverComposedUrl(projectId, task.id)
+    : `${API_BASE}/api/projects/${projectId}/covers/${task.id}/file`;
+
+  const compose = async () => {
+    if (!title.trim() && !author.trim()) return;
+    setBusy(true);
+    try {
+      await api.composeCover(projectId, task.id, title.trim(), author.trim());
+      await onChanged();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div>
+      <img className="cover-preview" src={src} alt={task.prompt} />
+      <div className="compose-row">
+        <input placeholder="书名" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input placeholder="作者名" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        <button className="btn primary" disabled={busy} onClick={() => void compose()}>
+          {busy ? '合成中…' : '叠加文字'}
+        </button>
       </div>
     </div>
   );

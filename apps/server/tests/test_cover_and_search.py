@@ -15,8 +15,10 @@ def test_cover_task_registered(client):
 
 def test_cover_task_real_call_success(client, monkeypatch):
     import base64
+    import io
 
     import httpx
+    from PIL import Image
 
     from app.services.cover_service import settings
 
@@ -29,7 +31,9 @@ def test_cover_task_real_call_success(client, monkeypatch):
             return None
 
         def json(self):
-            return {"data": [{"b64_json": base64.b64encode(b"fake-png-bytes").decode()}]}
+            buf = io.BytesIO()
+            Image.new("RGB", (64, 64), (80, 120, 200)).save(buf, format="PNG")
+            return {"data": [{"b64_json": base64.b64encode(buf.getvalue()).decode()}]}
 
     monkeypatch.setattr(httpx, "post", lambda *a, **k: FakeResponse())
 
@@ -43,7 +47,17 @@ def test_cover_task_real_call_success(client, monkeypatch):
 
     download = client.get(f"{base}/{created['id']}/file")
     assert download.status_code == 200
-    assert download.content == b"fake-png-bytes"
+    assert download.content[:8] == b"\x89PNG\r\n\x1a\n"
+
+    composed = client.post(
+        f"{base}/{created['id']}/compose",
+        json={"title": "大梦山海", "author": "灵风"},
+    )
+    assert composed.status_code == 200
+    assert composed.json()["composedPath"].endswith("_composed.png")
+    comp_img = client.get(f"{base}/{created['id']}/composed")
+    assert comp_img.status_code == 200
+    assert comp_img.content[:8] == b"\x89PNG\r\n\x1a\n"
 
 
 def test_search_and_links(client):

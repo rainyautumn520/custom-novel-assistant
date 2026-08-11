@@ -150,6 +150,7 @@ export interface CoverTask {
   status: CoverTaskStatus;
   idempotencyKey: string;
   resultPath: string | null;
+  composedPath: string | null;
   error: string;
   createdAt: string;
   updatedAt: string;

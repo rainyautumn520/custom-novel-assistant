@@ -14,6 +14,7 @@ class CoverTaskOut(BaseModel):
     status: str
     idempotency_key: str
     result_path: str | None
+    composed_path: str | None
     error: str
     created_at: str
     updated_at: str

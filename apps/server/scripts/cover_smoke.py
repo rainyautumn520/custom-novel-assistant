@@ -18,6 +18,9 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
     "prototype",
     "cover-test.png",
 )
+COMPOSED_OUT = os.path.join(ROOT, "prototype", "cover-composed-test.png")
+COVER_TITLE = os.environ.get("COVER_TITLE", "大梦山海")
+COVER_AUTHOR = os.environ.get("COVER_AUTHOR", "灵风")
 
 
 def req(method: str, path: str, body: dict | None = None, timeout: int = 240):
@@ -63,6 +66,23 @@ def main() -> int:
     with open(OUT, "wb") as fh:
         fh.write(data)
     print(f"COVER SMOKE PASSED: {len(data)} bytes -> {OUT}")
+
+    print("composing title/author...")
+    st, composed = req(
+        "POST",
+        f"/api/projects/{pid}/covers/{task['id']}/compose",
+        {"title": COVER_TITLE, "author": COVER_AUTHOR},
+    )
+    if st != 200 or not composed.get("composedPath"):
+        print("compose failed:", composed)
+        return 1
+    with urllib.request.urlopen(
+        f"{BASE}/api/projects/{pid}/covers/{task['id']}/composed", timeout=60
+    ) as resp:
+        composed_data = resp.read()
+    with open(COMPOSED_OUT, "wb") as fh:
+        fh.write(composed_data)
+    print(f"COMPOSE PASSED: {len(composed_data)} bytes -> {COMPOSED_OUT}")
     return 0
 
 

@@ -292,6 +292,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ prompt, params }),
     }),
+  composeCover: (pid: string, taskId: string, title: string, author: string) =>
+    request<CoverTask>(`/api/projects/${pid}/covers/${taskId}/compose`, {
+      method: 'POST',
+      body: JSON.stringify({ title, author }),
+    }),
+  coverComposedUrl: (pid: string, taskId: string) =>
+    `${API_BASE}/api/projects/${pid}/covers/${taskId}/composed`,
 
   listAllLinks: (pid: string) => request<EntityLink[]>(`/api/projects/${pid}/links`),
   search: (pid: string, query: string) =>

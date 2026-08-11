@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Chapter, OutlineNode } from '@ai-novel-ide/shared-types';
 
-import { api } from '../api';
+import { api, type ChapterCommitItem } from '../api';
 
 type SaveState = 'saved' | 'saving' | 'failed';
 
@@ -48,6 +48,7 @@ export default function EditorPage({
   } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [undoStack, setUndoStack] = useState<{ content: string }[]>([]);
+  const [commits, setCommits] = useState<ChapterCommitItem[]>([]);
   const contentRef = useRef(content);
   const titleRef = useRef(title);
   const selectedIdRef = useRef(selectedId);
@@ -95,6 +96,7 @@ export default function EditorPage({
       setContent(detail.contentMd);
       setFileIntegrity(detail.fileIntegrity);
       setSaveState('saved');
+      void api.listChapterCommits(projectId, chapterId).then(setCommits).catch(() => undefined);
 
       const raw = localStorage.getItem(draftKey(projectId, chapterId));
       if (raw) {
@@ -251,6 +253,34 @@ export default function EditorPage({
     }
   };
 
+  const submitChapter = async () => {
+    if (!selectedId) return;
+    if (!window.confirm('提交章节？将生成事实记录并标记为已提交，可随时驳回。')) return;
+    setAiBusy(true);
+    setError('');
+    try {
+      await doSave();
+      await api.commitChapter(projectId, selectedId);
+      await load();
+      setCommits(await api.listChapterCommits(projectId, selectedId));
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const rejectLatestCommit = async (commitId: string) => {
+    if (!window.confirm('驳回该提交？章节将回到草稿状态。')) return;
+    try {
+      await api.rejectCommit(projectId, commitId);
+      setCommits(await api.listChapterCommits(projectId, selectedId!));
+      await load();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   const createChapter = async () => {
     const created = await api.createChapter(projectId, `第 ${chapters.length + 1} 章`);
     setChapters((prev) => [...prev, created]);
@@ -282,6 +312,7 @@ export default function EditorPage({
               onClick={() => void selectChapter(c.id)}
             >
               <span className="tree-title">{c.title}</span>
+              {c.status === 'committed' && <span className="badge done">已提交</span>}
               <span className="count mono">{c.wordCount}</span>
             </div>
           ))}
@@ -332,9 +363,14 @@ export default function EditorPage({
             ) : null}
             <div className="spacer" />
             {selectedId && (
-              <button className="btn ghost" onClick={() => void removeChapter()}>
-                删除章节
-              </button>
+              <>
+                <button className="btn primary" disabled={aiBusy} onClick={() => void submitChapter()}>
+                  提交章节
+                </button>
+                <button className="btn ghost" onClick={() => void removeChapter()}>
+                  删除章节
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -417,6 +453,35 @@ export default function EditorPage({
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+          <div className="ctx-section">
+            <h4>提交记录</h4>
+            {commits.length === 0 ? (
+              <div className="contract-box">本章尚未提交；写完后点「提交章节」入账。</div>
+            ) : (
+              commits.map((c) => (
+                <div key={c.id} className={`commit-item commit-${c.status}`}>
+                  <div className="commit-head">
+                    <span className="commit-status">
+                      {c.status === 'accepted' ? '已提交' : '已驳回'}
+                    </span>
+                    <span className="mono">{new Date(c.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="commit-summary">{c.summaryText}</div>
+                  {c.entityDeltas.length > 0 && (
+                    <div className="commit-links">自动关联 {c.entityDeltas.length} 个实体</div>
+                  )}
+                  {c.projectionStatus.index === 'failed' && (
+                    <div className="hint">向量索引更新失败</div>
+                  )}
+                  {c.status === 'accepted' && (
+                    <button className="btn ghost" onClick={() => void rejectLatestCommit(c.id)}>
+                      驳回
+                    </button>
+                  )}
+                </div>
+              ))
             )}
           </div>
           <div className="ctx-section">

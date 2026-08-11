@@ -188,6 +188,12 @@ await page.getByRole('button', { name: '续写', exact: true }).click();
 await page.waitForSelector('.page-error', { timeout: 10000 });
 await page.screenshot({ path: path.join(OUT, 'preview-app-editor-assist-503.png') });
 
+await page.getByRole('button', { name: '提交章节', exact: true }).click();
+await page.waitForSelector('.commit-item', { timeout: 15000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-editor-commit.png') });
+await page.getByRole('button', { name: '驳回', exact: true }).click();
+await page.waitForSelector('.commit-rejected', { timeout: 10000 });
+
 await page.getByRole('button', { name: '人物', exact: true }).click();
 await page.waitForSelector('text=林晚');
 await page.locator('.char-card', { hasText: '林晚' }).click();

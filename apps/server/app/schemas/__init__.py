@@ -2,6 +2,7 @@ from app.schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
 from app.schemas.asset import AssetCreate, AssetOut, AssetUpdate
 from app.schemas.ai import AiSessionOut
 from app.schemas.cover import CoverTaskOut
+from app.schemas.commit import ChapterCommitListOut, ChapterCommitOut
 from app.schemas.category import CategoryCreate, CategoryOut, CategoryUpdate
 from app.schemas.chapter import ChapterCreate, ChapterDetail, ChapterOut, ChapterUpdate
 from app.schemas.outline import OutlineCreate, OutlineOut, OutlineUpdate
@@ -18,6 +19,8 @@ __all__ = [
     "AssetUpdate",
     "AiSessionOut",
     "CoverTaskOut",
+    "ChapterCommitListOut",
+    "ChapterCommitOut",
     "CategoryCreate",
     "CategoryOut",
     "CategoryUpdate",

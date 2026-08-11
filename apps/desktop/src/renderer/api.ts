@@ -36,6 +36,19 @@ export interface ExportPreview {
   items: ExportPreviewItem[];
 }
 
+export interface ChapterCommitItem {
+  id: string;
+  chapterId: string;
+  status: string;
+  acceptedEvents: unknown[];
+  stateDeltas: Record<string, unknown>;
+  entityDeltas: { type: string; id: string; title: string }[];
+  summaryText: string;
+  projectionStatus: Record<string, string>;
+  createdAt: string;
+  chapterTitle?: string;
+}
+
 export interface SearchResult {
   type: string;
   id: string;
@@ -284,4 +297,16 @@ export const api = {
       summary: string;
       dims: { name: string; status: string; issues: string[] }[];
     }>(`/api/projects/${pid}/chapters/${chapterId}/review`, { method: 'POST' }),
+
+  commitChapter: (pid: string, chapterId: string) =>
+    request<ChapterCommitItem>(`/api/projects/${pid}/chapters/${chapterId}/commit`, {
+      method: 'POST',
+    }),
+  listCommits: (pid: string) => request<ChapterCommitItem[]>(`/api/projects/${pid}/commits`),
+  listChapterCommits: (pid: string, chapterId: string) =>
+    request<ChapterCommitItem[]>(`/api/projects/${pid}/chapters/${chapterId}/commits`),
+  rejectCommit: (pid: string, commitId: string) =>
+    request<ChapterCommitItem>(`/api/projects/${pid}/commits/${commitId}/reject`, {
+      method: 'POST',
+    }),
 };

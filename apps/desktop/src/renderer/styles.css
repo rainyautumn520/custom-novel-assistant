@@ -282,6 +282,23 @@ input { font: inherit; color: inherit; }
 .review-issue {
   margin-top: 4px; color: var(--text-2); font-size: 12px; line-height: 1.5;
 }
+
+/* ---------- 提交记录 ---------- */
+.commit-item {
+  border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+  background: var(--panel-2); margin-bottom: 8px; font-size: 12.5px;
+}
+.commit-accepted { border-left: 3px solid var(--success); }
+.commit-rejected { border-left: 3px solid var(--warning); }
+.commit-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+.commit-status { color: var(--success); font-weight: 500; }
+.commit-rejected .commit-status { color: var(--warning); }
+.commit-head .mono { color: var(--text-3); font-size: 11px; }
+.commit-summary {
+  color: var(--text-2); line-height: 1.6; margin-bottom: 5px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.commit-links { color: var(--info); font-size: 12px; margin-bottom: 4px; }
 .search-box {
   width: 220px; background: var(--panel-2); border: 1px solid var(--border);
   border-radius: 6px; padding: 6px 10px;

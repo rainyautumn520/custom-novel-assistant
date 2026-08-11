@@ -71,6 +71,7 @@ export interface OutlineNode {
   forbidden: string[];
   status: OutlineStatus;
   targetWords: number;
+  strands: string[];
   chapterId: string | null;
   createdAt: string;
   updatedAt: string;

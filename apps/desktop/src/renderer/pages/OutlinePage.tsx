@@ -292,6 +292,7 @@ function OutlineEditor({
   const [forbidden, setForbidden] = useState(node.forbidden.join('\n'));
   const [targetWords, setTargetWords] = useState(String(node.targetWords));
   const [status, setStatus] = useState(node.status);
+  const [strands, setStrands] = useState<string[]>(node.strands);
 
   useEffect(() => {
     setTitle(node.title);
@@ -300,7 +301,14 @@ function OutlineEditor({
     setForbidden(node.forbidden.join('\n'));
     setTargetWords(String(node.targetWords));
     setStatus(node.status);
+    setStrands(node.strands);
   }, [node]);
+
+  const toggleStrand = (key: string) => {
+    setStrands((prev) =>
+      prev.includes(key) ? prev.filter((s) => s !== key) : [...prev, key],
+    );
+  };
 
   const handleSave = async () => {
     await onSave({
@@ -310,6 +318,7 @@ function OutlineEditor({
       forbidden: forbidden.split('\n').map((x) => x.trim()).filter(Boolean),
       targetWords: Number(targetWords) || 0,
       status,
+      strands,
     });
   };
 
@@ -367,6 +376,26 @@ function OutlineEditor({
             <option value="active">写作中</option>
             <option value="done">已完成</option>
           </select>
+        </div>
+      </div>
+
+      <div className="field">
+        <label>节奏标签（Strand Weave）</label>
+        <div className="strand-picker">
+          {[
+            ['quest', '主线 Quest'],
+            ['fire', '感情线 Fire'],
+            ['constellation', '世界观 Constellation'],
+          ].map(([key, label]) => (
+            <label key={key} className="link-option">
+              <input
+                type="checkbox"
+                checked={strands.includes(key)}
+                onChange={() => toggleStrand(key)}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
         </div>
       </div>
 

@@ -49,6 +49,39 @@ export interface ChapterCommitItem {
   chapterTitle?: string;
 }
 
+export interface RhythmData {
+  strands: Record<
+    string,
+    { label: string; chapters: number; ratio: number; maxGap: number; limit: number; ok: boolean }
+  >;
+  timeline: {
+    chapterId: string;
+    chapterTitle: string;
+    volumeTitle: string;
+    status: string;
+    words: number;
+    strands: string[];
+  }[];
+  openChekhovs: number;
+}
+
+export interface Chekhov {
+  id: string;
+  title: string;
+  description: string;
+  plantedChapterId: string | null;
+  payoffChapterId: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DoctorData {
+  healthy: boolean;
+  summary: string;
+  checks: { id: string; label: string; status: string; detail: string }[];
+}
+
 export interface SearchResult {
   type: string;
   id: string;
@@ -309,4 +342,20 @@ export const api = {
     request<ChapterCommitItem>(`/api/projects/${pid}/commits/${commitId}/reject`, {
       method: 'POST',
     }),
+
+  getRhythm: (pid: string) => request<RhythmData>(`/api/projects/${pid}/rhythm`),
+  listChekhovs: (pid: string) => request<Chekhov[]>(`/api/projects/${pid}/chekhovs`),
+  createChekhov: (pid: string, data: Partial<Chekhov>) =>
+    request<Chekhov>(`/api/projects/${pid}/chekhovs`, {
+      method: 'POST',
+      body: JSON.stringify({ title: '新伏笔', ...data }),
+    }),
+  updateChekhov: (pid: string, id: string, data: Partial<Chekhov>) =>
+    request<Chekhov>(`/api/projects/${pid}/chekhovs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteChekhov: (pid: string, id: string) =>
+    request<void>(`/api/projects/${pid}/chekhovs/${id}`, { method: 'DELETE' }),
+  getDoctor: (pid: string) => request<DoctorData>(`/api/projects/${pid}/doctor`),
 };

@@ -10,6 +10,8 @@ from app.api import (
     chapters,
     characters,
     commits,
+    chekhovs,
+    doctor,
     covers,
     exports,
     graph,
@@ -17,6 +19,7 @@ from app.api import (
     outlines,
     projects,
     rag,
+    rhythm,
     search,
     settings,
     writing,
@@ -63,6 +66,9 @@ app.include_router(search.router)
 app.include_router(rag.router)
 app.include_router(writing.router)
 app.include_router(commits.router)
+app.include_router(chekhovs.router)
+app.include_router(doctor.router)
+app.include_router(rhythm.router)
 
 
 @app.get("/api/health", tags=["meta"])

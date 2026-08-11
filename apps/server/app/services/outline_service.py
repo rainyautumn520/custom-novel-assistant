@@ -73,7 +73,16 @@ def update_node(project_id: str, node_id: str, data: dict) -> OutlineNode:
         if "parent_id" in data:
             _validate_parent(session, node.level, data["parent_id"], exclude_id=node.id)
             node.parent_id = data["parent_id"]
-        for key in ("title", "goal", "must_cover", "forbidden", "status", "target_words", "sort_order"):
+        for key in (
+            "title",
+            "goal",
+            "must_cover",
+            "forbidden",
+            "status",
+            "target_words",
+            "strands",
+            "sort_order",
+        ):
             if key in data and data[key] is not None:
                 setattr(node, key, data[key])
         session.commit()

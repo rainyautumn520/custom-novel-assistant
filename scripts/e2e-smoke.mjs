@@ -128,6 +128,15 @@ async function seed() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title: '北境笔记', contentMd: '灵脉分布与地图灵感。', tags: ['地图'] }),
   });
+  await fetch(`${API}/api/projects/${pid}/chekhovs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: '山海令的来历',
+      description: '第3章牌楼灵纹已埋下线索。',
+      status: 'open',
+    }),
+  });
   return project;
 }
 
@@ -156,7 +165,7 @@ try {
 await page.screenshot({ path: path.join(OUT, 'preview-app-home.png') });
 
 await page.locator('.card').first().click();
-await page.waitForSelector('text=大梦山海');
+await page.waitForSelector('.doctor-list', { timeout: 15000 });
 await page.screenshot({ path: path.join(OUT, 'preview-app-overview.png') });
 
 await page.getByRole('button', { name: '设定', exact: true }).click();
@@ -247,6 +256,11 @@ await page.getByRole('button', { name: '图谱', exact: true }).click();
 await page.waitForSelector('svg circle', { timeout: 10000 });
 await page.waitForTimeout(1200);
 await page.screenshot({ path: path.join(OUT, 'preview-app-graph.png') });
+
+await page.getByRole('button', { name: '节奏', exact: true }).click();
+await page.waitForSelector('.strand-card', { timeout: 10000 });
+await page.waitForSelector('text=山海令的来历');
+await page.screenshot({ path: path.join(OUT, 'preview-app-strand.png') });
 
 console.log('E2E smoke passed, screenshots ->', OUT);
 await browser.close();

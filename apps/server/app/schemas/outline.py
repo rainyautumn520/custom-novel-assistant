@@ -12,6 +12,7 @@ class OutlineCreate(BaseModel):
     must_cover: list[str] = []
     forbidden: list[str] = []
     target_words: int = 0
+    strands: list[str] = []
     sort_order: int = 0
 
 
@@ -25,6 +26,7 @@ class OutlineUpdate(BaseModel):
     forbidden: list[str] | None = None
     status: str | None = None
     target_words: int | None = None
+    strands: list[str] | None = None
     sort_order: int | None = None
 
 
@@ -43,6 +45,7 @@ class OutlineOut(BaseModel):
     forbidden: list[str]
     status: str
     target_words: int
+    strands: list[str]
     chapter_id: str | None
     created_at: str
     updated_at: str

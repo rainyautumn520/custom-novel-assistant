@@ -11,12 +11,17 @@ import GraphPage from './pages/GraphPage';
 import OutlinePage from './pages/OutlinePage';
 import AssetsPage from './pages/AssetsPage';
 import SettingsPage from './pages/SettingsPage';
+import StrandPage from './pages/StrandPage';
+import type { DoctorData, RhythmData } from './api';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
 
 type View = 'home' | 'workspace';
 
-const NAV_ITEMS = ['概览', '设定', '人物', '大纲', '正文', '素材', '导出', 'AI 讨论', '封面工坊', '图谱'];
+const NAV_ITEMS = [
+  '概览', '设定', '人物', '大纲', '正文', '素材', '导出',
+  'AI 讨论', '封面工坊', '图谱', '节奏',
+];
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -198,12 +203,14 @@ function Workspace({
   if (nav === 'AI 讨论') return <AiPage projectId={project.id} />;
   if (nav === '封面工坊') return <CoversPage projectId={project.id} />;
   if (nav === '图谱') return <GraphPage projectId={project.id} />;
+  if (nav === '节奏') return <StrandPage projectId={project.id} />;
+  if (nav === '概览') return <Overview projectId={project.id} />;
 
   return (
     <div className="page-pad">
       <h1>{project.name}</h1>
       <p className="muted">
-        当前模块：{nav}（该模块开发中。已完成：设定 / 人物 / 大纲 / 正文 / 导出）
+        当前模块：{nav}（该模块开发中）
       </p>
       <div className="stats">
         <div className="stat"><div className="num">0</div><div className="lbl">总字数</div></div>
@@ -211,6 +218,56 @@ function Workspace({
         <div className="stat"><div className="num">0</div><div className="lbl">设定</div></div>
         <div className="stat"><div className="num">0</div><div className="lbl">人物</div></div>
       </div>
+    </div>
+  );
+}
+
+function Overview({ projectId }: { projectId: string }) {
+  const [doctor, setDoctor] = useState<DoctorData | null>(null);
+  const [rhythm, setRhythm] = useState<RhythmData | null>(null);
+  useEffect(() => {
+    void api.getDoctor(projectId).then(setDoctor).catch(() => undefined);
+    void api.getRhythm(projectId).then(setRhythm).catch(() => undefined);
+  }, [projectId]);
+
+  return (
+    <div className="page-pad">
+      <h1>作品概览</h1>
+      <p className="muted">
+        项目体检：{doctor ? (doctor.healthy ? '✓ 健康' : '发现需要处理的问题') : '检查中…'}
+      </p>
+
+      {doctor && (
+        <div className="doctor-list">
+          {doctor.checks.map((check) => (
+            <div key={check.id} className={`doctor-item doctor-${check.status}`}>
+              <span className="doctor-label">{check.label}</span>
+              <span className="doctor-status">
+                {check.status === 'ok' ? '通过' : check.status === 'warn' ? '提醒' : check.status === 'fail' ? '问题' : '信息'}
+              </span>
+              <span className="doctor-detail">{check.detail}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {rhythm && (
+        <div className="strand-cards">
+          {Object.entries(rhythm.strands).map(([key, s]) => (
+            <div key={key} className="strand-card">
+              <div className="strand-head">
+                <span className="strand-name">{s.label}</span>
+                <span className={`badge ${s.ok ? 'done' : 'active'}`}>
+                  {s.ok ? '正常' : `断档 ${s.maxGap}/${s.limit}`}
+                </span>
+              </div>
+              <div className="strand-nums">
+                覆盖 {s.chapters} 章 · 占比 {Math.round(s.ratio * 100)}% · 未回收伏笔 {rhythm.openChekhovs}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

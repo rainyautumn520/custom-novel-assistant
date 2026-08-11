@@ -299,6 +299,70 @@ input { font: inherit; color: inherit; }
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .commit-links { color: var(--info); font-size: 12px; margin-bottom: 4px; }
+
+/* ---------- 节奏与伏笔 ---------- */
+.strand-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 22px 16px; }
+.strand-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 13px 15px;
+}
+.strand-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.strand-dot { width: 10px; height: 10px; border-radius: 50%; }
+.strand-name { font-weight: 600; }
+.strand-head .badge { margin-left: auto; }
+.strand-nums { color: var(--text-2); font-size: 12.5px; margin-bottom: 8px; }
+.strand-bar { height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; margin-bottom: 8px; }
+.strand-fill { height: 100%; border-radius: 3px; }
+.strand-gap { color: var(--text-3); font-size: 12px; }
+.strand-layout { flex: 1; display: flex; min-height: 0; }
+.strand-main { flex: 1; min-width: 0; padding: 0 22px 18px; overflow: auto; }
+.strand-side { width: 320px; flex: 0 0 320px; border-left: 1px solid var(--border); padding: 0 18px 18px; overflow: auto; }
+.timeline { border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+.timeline-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.timeline-item:last-child { border-bottom: none; }
+.strand-chip {
+  font-size: 11px; border: 1px solid currentColor; border-radius: 10px;
+  padding: 1px 8px; opacity: .9;
+}
+.chekhov-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.chekhov-form input {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; color: var(--text); outline: none;
+}
+.chekhov-list { display: flex; flex-direction: column; gap: 8px; }
+.chekhov-item {
+  border: 1px solid var(--border); border-radius: 8px; background: var(--panel);
+  padding: 10px 12px;
+}
+.chekhov-open { border-left: 3px solid var(--info); }
+.chekhov-resolved { border-left: 3px solid var(--success); }
+.chekhov-abandoned { border-left: 3px solid var(--text-3); }
+.chekhov-title { font-weight: 600; font-size: 13.5px; }
+.chekhov-item select {
+  margin-top: 6px; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; color: var(--text); outline: none; font-size: 12.5px;
+}
+.strand-picker { display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- 项目体检 ---------- */
+.doctor-list {
+  border: 1px solid var(--border); border-radius: 8px; background: var(--panel);
+  margin-bottom: 18px; max-width: 760px;
+}
+.doctor-item {
+  display: flex; align-items: center; gap: 12px; padding: 9px 14px;
+  border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.doctor-item:last-child { border-bottom: none; }
+.doctor-label { font-weight: 500; flex: 0 0 110px; }
+.doctor-status { font-size: 12px; flex: 0 0 44px; }
+.doctor-ok .doctor-status { color: var(--success); }
+.doctor-warn .doctor-status { color: var(--warning); }
+.doctor-fail .doctor-status { color: var(--danger); }
+.doctor-info .doctor-status { color: var(--info); }
+.doctor-detail { color: var(--text-2); font-size: 12.5px; word-break: break-all; }
 .search-box {
   width: 220px; background: var(--panel-2); border: 1px solid var(--border);
   border-radius: 6px; padding: 6px 10px;

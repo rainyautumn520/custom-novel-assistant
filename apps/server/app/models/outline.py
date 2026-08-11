@@ -19,6 +19,7 @@ class OutlineNode(NovelBase):
     forbidden: Mapped[list] = mapped_column(JSON, default=list)
     status: Mapped[str] = mapped_column(String(16), default="draft")
     target_words: Mapped[int] = mapped_column(default=0)
+    strands: Mapped[list] = mapped_column(JSON, default=list)
     chapter_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("chapters.id", ondelete="SET NULL", use_alter=True),

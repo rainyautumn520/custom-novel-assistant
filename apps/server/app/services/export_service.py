@@ -1,18 +1,13 @@
-import re
 from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
 
 from app.core.database import AppSession, project_db_path, project_session
+from app.core.text_utils import count_words, safe_filename
 from app.models.chapter import Chapter
 from app.models.app import Project
 from app.models.outline import OutlineNode
-
-
-def _safe_filename(name: str) -> str:
-    cleaned = "".join(c for c in name if c not in '<>:"/\\|?*').strip()
-    return cleaned or "未命名"
 
 
 def _write_txt(path: Path, text: str) -> None:
@@ -29,11 +24,7 @@ def _exports_dir(project_id: str) -> Path:
 def _resolve_output(project_id: str, output_path: str | None, default_name: str) -> Path:
     if output_path and output_path.strip():
         return Path(output_path.strip()).expanduser()
-    return _exports_dir(project_id) / f"{_safe_filename(default_name)}.txt"
-
-
-def _count_words(content: str) -> int:
-    return len(re.findall(r"\S", content))
+    return _exports_dir(project_id) / f"{safe_filename(default_name, fallback='未命名')}.txt"
 
 
 def export_single(
@@ -64,7 +55,7 @@ def export_single(
     _write_txt(target, text)
     return {
         "path": str(target),
-        "wordCount": _count_words(content),
+        "wordCount": count_words(content),
         "chaptersExported": 1,
         "chaptersSkipped": 0,
         "skippedTitles": [],
@@ -104,7 +95,7 @@ def preview_book(project_id: str) -> dict[str, Any]:
             content = (project_db_path(project_id).parent / chapter.file_path).read_text(
                 encoding="utf-8"
             )
-            words = _count_words(content)
+            words = count_words(content)
             total_words += words
             items.append(
                 {
@@ -171,7 +162,7 @@ def export_book(
             parts.append("")
             parts.append("")
             exported += 1
-            total_words += _count_words(content)
+            total_words += count_words(content)
 
     text = "\n".join(parts).rstrip() + "\n"
     target = _resolve_output(project_id, output_path, f"{project.name}_全书")

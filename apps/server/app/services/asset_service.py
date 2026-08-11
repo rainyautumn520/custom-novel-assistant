@@ -1,12 +1,8 @@
 from sqlalchemy import select
 
 from app.core.database import new_id, project_db_path, project_session
+from app.core.text_utils import safe_filename
 from app.models.asset import Asset
-
-
-def _safe_name(name: str) -> str:
-    cleaned = "".join(c for c in name if c not in '<>:"/\\|?*').strip()
-    return cleaned or "file"
 
 
 def list_assets(project_id: str) -> list[Asset]:
@@ -32,7 +28,7 @@ def create_file_asset(
     tags: list[str] | None = None,
 ) -> Asset:
     asset_id = new_id()
-    safe_name = _safe_name(filename)
+    safe_name = safe_filename(filename)
     asset_dir = project_db_path(project_id).parent / "assets" / asset_id
     asset_dir.mkdir(parents=True, exist_ok=True)
     file_path = asset_dir / safe_name

@@ -82,13 +82,6 @@ export interface DoctorData {
   checks: { id: string; label: string; status: string; detail: string }[];
 }
 
-export interface SearchResult {
-  type: string;
-  id: string;
-  title: string;
-  snippet: string;
-}
-
 export interface ChapterDetailWithIntegrity extends ChapterDetail {
   fileIntegrity: string;
 }
@@ -139,11 +132,6 @@ export const api = {
     request<SettingCategory>(`/api/projects/${pid}/categories`, {
       method: 'POST',
       body: JSON.stringify({ name }),
-    }),
-  updateCategory: (pid: string, id: string, data: Partial<SettingCategory>) =>
-    request<SettingCategory>(`/api/projects/${pid}/categories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
     }),
   deleteCategory: (pid: string, id: string) =>
     request<void>(`/api/projects/${pid}/categories/${id}`, { method: 'DELETE' }),
@@ -301,11 +289,6 @@ export const api = {
     `${API_BASE}/api/projects/${pid}/covers/${taskId}/composed`,
 
   listAllLinks: (pid: string) => request<EntityLink[]>(`/api/projects/${pid}/links`),
-  search: (pid: string, query: string) =>
-    request<SearchResult[]>(`/api/projects/${pid}/search`, {
-      method: 'POST',
-      body: JSON.stringify({ query }),
-    }),
   ragStatus: (pid: string) =>
     request<{ backend: string; model: string; count: number; ollamaAvailable: boolean }>(
       `/api/projects/${pid}/rag/status`,
@@ -342,7 +325,6 @@ export const api = {
     request<ChapterCommitItem>(`/api/projects/${pid}/chapters/${chapterId}/commit`, {
       method: 'POST',
     }),
-  listCommits: (pid: string) => request<ChapterCommitItem[]>(`/api/projects/${pid}/commits`),
   listChapterCommits: (pid: string, chapterId: string) =>
     request<ChapterCommitItem[]>(`/api/projects/${pid}/chapters/${chapterId}/commits`),
   rejectCommit: (pid: string, commitId: string) =>

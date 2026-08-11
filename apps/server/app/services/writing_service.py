@@ -45,7 +45,7 @@ def _related_settings(project_id: str, query: str) -> list[dict]:
         return []
 
 
-def _chapter_context(project_id: str, chapter: Chapter) -> tuple[str, str, str | None]:
+def _chapter_context(project_id: str, chapter: Chapter) -> tuple[str, OutlineNode | None]:
     root = project_db_path(project_id).parent
     content = (root / chapter.file_path).read_text(encoding="utf-8") if (
         root / chapter.file_path
@@ -54,12 +54,7 @@ def _chapter_context(project_id: str, chapter: Chapter) -> tuple[str, str, str |
     with project_session(project_id) as session:
         if chapter.outline_node_id:
             node = session.get(OutlineNode, chapter.outline_node_id)
-    volume_title = ""
-    if node and node.parent_id:
-        with project_session(project_id) as session:
-            volume = session.get(OutlineNode, node.parent_id)
-            volume_title = volume.title if volume else ""
-    return content, volume_title, node
+    return content, node
 
 
 def build_brief(project_id: str, node_id: str) -> dict[str, Any]:
@@ -128,7 +123,7 @@ def assist(
             from fastapi import HTTPException
 
             raise HTTPException(status_code=404, detail="章节不存在")
-    content, _volume_title, node = _chapter_context(project_id, chapter)
+    content, node = _chapter_context(project_id, chapter)
     related = _related_settings(project_id, content[-500:] + (node.goal if node else ""))
     related_lines = "\n".join(f"- {r['title']}：{r['snippet'][:80]}" for r in related) or "（无）"
     contract = (
@@ -162,7 +157,7 @@ def review(project_id: str, chapter_id: str) -> dict[str, Any]:
             from fastapi import HTTPException
 
             raise HTTPException(status_code=404, detail="章节不存在")
-    content, _volume_title, node = _chapter_context(project_id, chapter)
+    content, node = _chapter_context(project_id, chapter)
 
     dims = [
         {"name": "设定一致性", "status": "pass", "issues": []},

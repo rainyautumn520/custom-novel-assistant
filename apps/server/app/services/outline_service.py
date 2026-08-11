@@ -137,7 +137,6 @@ def move_node(
         elif node.level != "volume":
             raise HTTPException(status_code=422, detail="只有卷纲可以移动到根")
 
-        old_parent_id = node.parent_id
         node.parent_id = new_parent_id
         session.flush()
 

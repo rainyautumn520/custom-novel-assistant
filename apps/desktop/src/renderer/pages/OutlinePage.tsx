@@ -21,7 +21,6 @@ export default function OutlinePage({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
-  const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string | null; zone: string } | null>(null);
   const dragIdRef = useRef<string | null>(null);
   const dropZoneRef = useRef<{ id: string | null; zone: string } | null>(null);
@@ -108,7 +107,6 @@ export default function OutlinePage({
     const draggedId = dragIdRef.current;
     if (!draggedId || draggedId === node?.id) {
       dragIdRef.current = null;
-      setDragId(null);
       setDropTarget(null);
       return;
     }
@@ -135,7 +133,6 @@ export default function OutlinePage({
       await load(); // 回滚到服务端状态
     } finally {
       dragIdRef.current = null;
-      setDragId(null);
       setDropTarget(null);
     }
   };
@@ -151,7 +148,6 @@ export default function OutlinePage({
             draggable
             onDragStart={(e) => {
               dragIdRef.current = node.id;
-              setDragId(node.id);
               e.dataTransfer.effectAllowed = 'move';
               e.dataTransfer.setData('text/plain', node.id);
             }}

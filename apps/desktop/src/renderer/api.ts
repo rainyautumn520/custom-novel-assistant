@@ -113,6 +113,17 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  moveOutlineNode: (
+    pid: string,
+    id: string,
+    parentId: string | null,
+    position: 'before' | 'after' | 'inside',
+    siblingId?: string | null,
+  ) =>
+    request<OutlineNode>(`/api/projects/${pid}/outline/${id}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ parentId, position, siblingId: siblingId ?? null }),
+    }),
   deleteOutlineNode: (pid: string, id: string) =>
     request<void>(`/api/projects/${pid}/outline/${id}`, { method: 'DELETE' }),
   createChapterFromNode: (pid: string, nodeId: string) =>
@@ -191,6 +202,21 @@ export const api = {
     }),
   deleteAsset: (pid: string, id: string) =>
     request<void>(`/api/projects/${pid}/assets/${id}`, { method: 'DELETE' }),
+  uploadAsset: (pid: string, file: File, title: string, tags: string[]) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('title', title);
+    form.append('tags', tags.join(','));
+    return fetch(`${API_BASE}/api/projects/${pid}/assets/upload`, {
+      method: 'POST',
+      body: form,
+    }).then(async (resp) => {
+      if (!resp.ok) throw new Error(`上传失败（${resp.status}）`);
+      return (await resp.json()) as Asset;
+    });
+  },
+  assetFileUrl: (pid: string, id: string) =>
+    `${API_BASE}/api/projects/${pid}/assets/${id}/file`,
 
   listAiSessions: (pid: string) => request<AiSession[]>(`/api/projects/${pid}/ai/sessions`),
   createAiSession: (pid: string, title?: string) =>

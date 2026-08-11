@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Asset } from '@ai-novel-ide/shared-types';
 
 import { api } from '../api';
@@ -8,6 +8,7 @@ export default function AssetsPage({ projectId }: { projectId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(async () => {
     setAssets(await api.listAssets(projectId));
@@ -38,6 +39,16 @@ export default function AssetsPage({ projectId }: { projectId: string }) {
     setSelectedId(created.id);
   };
 
+  const uploadFile = async (file: File) => {
+    try {
+      const created = await api.uploadAsset(projectId, file, file.name.replace(/\.[^.]+$/, ''), []);
+      await load();
+      setSelectedId(created.id);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   return (
     <div className="page-fill">
       <div className="page-head">
@@ -46,6 +57,19 @@ export default function AssetsPage({ projectId }: { projectId: string }) {
         <div className="search-box">
           <input placeholder="搜索素材…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void uploadFile(file);
+            e.target.value = '';
+          }}
+        />
+        <button className="btn secondary" onClick={() => fileInputRef.current?.click()}>
+          ⬆ 上传文件
+        </button>
         <button className="btn primary" onClick={() => void createAsset()}>
           ＋ 新建素材
         </button>
@@ -151,10 +175,26 @@ function AssetEditor({
           <input value={tags} onChange={(e) => { setTags(e.target.value); setDirty(true); }} />
         </div>
       </div>
-      <div className="field">
-        <label>内容</label>
-        <textarea className="md-editor-textarea" value={contentMd} onChange={(e) => { setContentMd(e.target.value); setDirty(true); }} />
-      </div>
+      {kind === 'file' && asset.filePath ? (
+        <div className="field">
+          <label>文件</label>
+          <div className="file-info">
+            <span className="mono">{asset.filePath}</span>
+            <a
+              className="btn secondary"
+              href={api.assetFileUrl(projectId, asset.id)}
+              download
+            >
+              下载文件
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="field">
+          <label>内容</label>
+          <textarea className="md-editor-textarea" value={contentMd} onChange={(e) => { setContentMd(e.target.value); setDirty(true); }} />
+        </div>
+      )}
       <div className="field">
         <label>备注</label>
         <textarea className="textarea-field" value={notes} onChange={(e) => { setNotes(e.target.value); setDirty(true); }} />

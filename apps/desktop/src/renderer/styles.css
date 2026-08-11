@@ -225,6 +225,19 @@ input { font: inherit; color: inherit; }
 .cover-prompt { font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
 .cover-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-3); }
 
+/* ---------- 拖拽与文件 ---------- */
+.tree-item[draggable="true"] { cursor: grab; }
+.tree-item.drop-before { box-shadow: 0 -2px 0 0 var(--accent); }
+.tree-item.drop-after { box-shadow: 0 2px 0 0 var(--accent); }
+.tree-item.drop-inside { outline: 1px dashed var(--accent); outline-offset: -2px; }
+.file-info {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px;
+}
+.file-info .mono { color: var(--text-2); font-size: 12.5px; word-break: break-all; }
+.file-info .btn { text-decoration: none; white-space: nowrap; }
+
 /* ---------- 知识图谱 ---------- */
 .graph-wrap { flex: 1; min-height: 0; padding: 10px 22px 20px; }
 .graph-wrap svg {

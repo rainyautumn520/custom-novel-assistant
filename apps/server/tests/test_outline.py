@@ -50,3 +50,42 @@ def test_create_chapter_from_chapter_node(client):
     # 再次调用返回同一章节
     again = client.post(f"{base}/{chapter_node['id']}/create-chapter").json()
     assert again["id"] == chapter["id"]
+
+
+def test_outline_drag_move(client):
+    project = client.post("/api/projects", json={"name": "拖拽测试书"}).json()
+    base = f"/api/projects/{project['id']}/outline"
+    v1 = client.post(base, json={"level": "volume", "title": "第一卷"}).json()
+    v2 = client.post(base, json={"level": "volume", "title": "第二卷"}).json()
+    c1 = client.post(base, json={"level": "chapter", "title": "第1章", "parent_id": v1["id"]}).json()
+    c2 = client.post(base, json={"level": "chapter", "title": "第2章", "parent_id": v1["id"]}).json()
+
+    # 移动到另一卷末尾
+    moved = client.post(
+        f"{base}/{c1['id']}/move",
+        json={"parentId": v2["id"], "position": "inside"},
+    ).json()
+    assert moved["parentId"] == v2["id"]
+
+    # 移动到兄弟之前
+    moved2 = client.post(
+        f"{base}/{c2['id']}/move",
+        json={"parentId": v1["id"], "position": "after", "siblingId": None},
+    ).json()
+    assert moved2["parentId"] == v1["id"]
+
+    # 不能移动到自己的后代
+    beat = client.post(
+        base, json={"level": "beat", "title": "细纲", "parent_id": c2["id"]}
+    ).json()
+    resp = client.post(
+        f"{base}/{c2['id']}/move",
+        json={"parentId": beat["id"], "position": "inside"},
+    )
+    assert resp.status_code == 422
+
+    # 章纲不能移动到根
+    resp = client.post(
+        f"{base}/{c2['id']}/move", json={"parentId": None, "position": "inside"}
+    )
+    assert resp.status_code == 422

@@ -100,6 +100,66 @@ def delete_node(project_id: str, node_id: str) -> None:
         session.commit()
 
 
+def move_node(
+    project_id: str,
+    node_id: str,
+    new_parent_id: str | None,
+    position: str = "inside",
+    sibling_id: str | None = None,
+) -> OutlineNode:
+    """原子移动：校验层级与循环后，重排目标兄弟列表。"""
+    from fastapi import HTTPException
+
+    with project_session(project_id) as session:
+        node = session.get(OutlineNode, node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="大纲节点不存在")
+
+        if new_parent_id is not None:
+            parent = session.get(OutlineNode, new_parent_id)
+            if parent is None:
+                raise HTTPException(status_code=404, detail="目标节点不存在")
+            cursor: OutlineNode | None = parent
+            while cursor is not None:
+                if cursor.id == node.id:
+                    raise HTTPException(status_code=422, detail="不能移动到自己的子节点")
+                cursor = session.get(OutlineNode, cursor.parent_id) if cursor.parent_id else None
+            _validate_parent(session, node.level, new_parent_id, exclude_id=node.id)
+        elif node.level != "volume":
+            raise HTTPException(status_code=422, detail="只有卷纲可以移动到根")
+
+        old_parent_id = node.parent_id
+        node.parent_id = new_parent_id
+        session.flush()
+
+        siblings = list(
+            session.scalars(
+                select(OutlineNode)
+                .where(OutlineNode.parent_id == new_parent_id)
+                .order_by(OutlineNode.sort_order, OutlineNode.created_at)
+            )
+        )
+        siblings = [s for s in siblings if s.id != node.id]
+        if sibling_id is not None:
+            if position == "before":
+                index = next((i for i, s in enumerate(siblings) if s.id == sibling_id), len(siblings))
+            elif position == "after":
+                index = next(
+                    (i for i, s in enumerate(siblings) if s.id == sibling_id), len(siblings) - 1
+                ) + 1
+            else:
+                index = len(siblings)
+        else:
+            index = len(siblings)
+        siblings.insert(index, node)
+
+        for order, sibling in enumerate(siblings):
+            sibling.sort_order = order
+        session.commit()
+        session.refresh(node)
+        return node
+
+
 def create_chapter_from_node(project_id: str, node_id: str) -> Chapter:
     from fastapi import HTTPException
 

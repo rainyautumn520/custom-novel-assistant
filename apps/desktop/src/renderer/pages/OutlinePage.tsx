@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { OutlineNode } from '@ai-novel-ide/shared-types';
 
@@ -21,6 +21,10 @@ export default function OutlinePage({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string | null; zone: string } | null>(null);
+  const dragIdRef = useRef<string | null>(null);
+  const dropZoneRef = useRef<{ id: string | null; zone: string } | null>(null);
 
   const load = useCallback(async () => {
     const items = await api.listOutline(projectId);
@@ -95,6 +99,47 @@ export default function OutlinePage({
     }
   };
 
+  const dropZoneClass = (nodeId: string) => {
+    if (!dropTarget || dropTarget.id !== nodeId) return '';
+    return `drop-${dropTarget.zone}`;
+  };
+
+  const handleDrop = async (node: OutlineNode | null, zone: string) => {
+    const draggedId = dragIdRef.current;
+    if (!draggedId || draggedId === node?.id) {
+      dragIdRef.current = null;
+      setDragId(null);
+      setDropTarget(null);
+      return;
+    }
+    const dragged = nodes.find((n) => n.id === draggedId);
+    if (!dragged) return;
+    try {
+      if (node === null) {
+        await api.moveOutlineNode(projectId, dragged.id, null, 'inside');
+      } else if (zone === 'inside') {
+        await api.moveOutlineNode(projectId, dragged.id, node.id, 'inside');
+      } else {
+        await api.moveOutlineNode(
+          projectId,
+          dragged.id,
+          node.parentId,
+          zone as 'before' | 'after',
+          node.id,
+        );
+      }
+      await load();
+      setSelectedId(dragged.id);
+    } catch (e) {
+      window.alert(String(e));
+      await load(); // 回滚到服务端状态
+    } finally {
+      dragIdRef.current = null;
+      setDragId(null);
+      setDropTarget(null);
+    }
+  };
+
   const renderTree = (parentId: string | null, depth: number): ReactNode[] => {
     return childrenOf(parentId).map((node) => {
       const hasChildren = childrenOf(node.id).length > 0;
@@ -102,8 +147,35 @@ export default function OutlinePage({
       return (
         <div key={node.id}>
           <div
-            className={`tree-item ${node.id === selectedId ? 'active' : ''}`}
             style={{ paddingLeft: 10 + depth * 18 }}
+            draggable
+            onDragStart={(e) => {
+              dragIdRef.current = node.id;
+              setDragId(node.id);
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', node.id);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = (e.clientY - rect.top) / rect.height;
+              const zone = y < 0.3 ? 'before' : y > 0.7 ? 'after' : 'inside';
+              dropZoneRef.current = { id: node.id, zone };
+              setDropTarget({ id: node.id, zone });
+            }}
+            onDragLeave={() => {
+              if (dropZoneRef.current?.id === node.id) dropZoneRef.current = null;
+              setDropTarget((prev) => (prev?.id === node.id ? null : prev));
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const zone =
+                dropZoneRef.current?.id === node.id ? dropZoneRef.current.zone : 'inside';
+              void handleDrop(node, zone);
+            }}
+            className={`tree-item ${node.id === selectedId ? 'active' : ''} ${dropZoneClass(node.id)}`}
             onClick={() => setSelectedId(node.id)}
           >
             <span
@@ -144,7 +216,20 @@ export default function OutlinePage({
       {error && <div className="page-error">{error}</div>}
 
       <div className="outline-layout">
-        <div className="outline-tree">
+        <div
+          className="outline-tree"
+          onDragOver={(e) => {
+            if (dragIdRef.current) {
+              e.preventDefault();
+              dropZoneRef.current = { id: null, zone: 'inside' };
+              setDropTarget({ id: null, zone: 'inside' });
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            void handleDrop(null, 'inside');
+          }}
+        >
           {nodes.length === 0 && <div className="list-empty">还没有大纲，点「新建卷」开始。</div>}
           {renderTree(null, 0)}
           <div className="tree-add">

@@ -142,7 +142,8 @@ page.on('console', (m) => {
   if (m.type() === 'error') console.log('CONSOLE ERROR:', m.text());
 });
 
-await seed();
+const project = await seed();
+const pid = project.id;
 await page.goto(UI, { waitUntil: 'networkidle' });
 try {
   await page.waitForSelector('.card', { timeout: 15000 });
@@ -190,6 +191,31 @@ await page.screenshot({ path: path.join(OUT, 'preview-app-export-done.png') });
 await page.getByRole('button', { name: '素材', exact: true }).click();
 await page.waitForSelector('text=北境笔记');
 await page.screenshot({ path: path.join(OUT, 'preview-app-assets.png') });
+
+await page.setInputFiles('input[type="file"]', {
+  name: '北境灵感.txt',
+  mimeType: 'text/plain',
+  buffer: Buffer.from('北境地理与灵脉分布灵感记录。'),
+});
+await page.waitForSelector('text=北境灵感', { timeout: 10000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-assets-upload.png') });
+
+await page.getByRole('button', { name: '大纲', exact: true }).click();
+await page.waitForSelector('text=第一卷 · 灵起');
+const getChapterOrder = async () => {
+  const items = await fetch(`${API}/api/projects/${pid}/outline`).then((r) => r.json());
+  return items.filter((n) => n.level === 'chapter').map((n) => n.title);
+};
+const orderBefore = await getChapterOrder();
+const ch1 = page.locator('.tree-item', { hasText: '第 1 章 · 觉醒' });
+const ch2 = page.locator('.tree-item', { hasText: '第 2 章 · 入城' });
+await ch2.dragTo(ch1, { targetPosition: { x: 5, y: 4 } });
+await page.waitForTimeout(600);
+const orderAfter = await getChapterOrder();
+if (JSON.stringify(orderBefore) === JSON.stringify(orderAfter)) {
+  throw new Error('drag did not reorder chapters');
+}
+console.log('drag reorder OK:', orderBefore, '->', orderAfter);
 
 await page.getByRole('button', { name: 'AI 讨论', exact: true }).click();
 await page.waitForSelector('.ai-layout');

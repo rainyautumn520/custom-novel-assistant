@@ -1,7 +1,11 @@
 import type {
+  Asset,
+  AiMessage,
+  AiSession,
   Chapter,
   ChapterDetail,
   Character,
+  CoverTask,
   EntityLink,
   OutlineNode,
   Project,
@@ -30,6 +34,17 @@ export interface ExportPreview {
   exportedCount: number;
   skippedCount: number;
   items: ExportPreviewItem[];
+}
+
+export interface SearchResult {
+  type: string;
+  id: string;
+  title: string;
+  snippet: string;
+}
+
+export interface ChapterDetailWithIntegrity extends ChapterDetail {
+  fileIntegrity: string;
 }
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
@@ -110,9 +125,9 @@ export const api = {
       body: JSON.stringify({ title }),
     }),
   getChapter: (pid: string, id: string) =>
-    request<ChapterDetail>(`/api/projects/${pid}/chapters/${id}`),
+    request<ChapterDetailWithIntegrity>(`/api/projects/${pid}/chapters/${id}`),
   saveChapter: (pid: string, id: string, data: { title?: string; contentMd?: string }) =>
-    request<ChapterDetail>(`/api/projects/${pid}/chapters/${id}`, {
+    request<ChapterDetailWithIntegrity>(`/api/projects/${pid}/chapters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
@@ -161,5 +176,55 @@ export const api = {
     request<ExportResult>(`/api/projects/${pid}/exports/book`, {
       method: 'POST',
       body: JSON.stringify({ includeVolume, includeChapter, outputPath: outputPath || null }),
+    }),
+
+  listAssets: (pid: string) => request<Asset[]>(`/api/projects/${pid}/assets`),
+  createAsset: (pid: string, data: Partial<Asset>) =>
+    request<Asset>(`/api/projects/${pid}/assets`, {
+      method: 'POST',
+      body: JSON.stringify({ title: '未命名素材', ...data }),
+    }),
+  updateAsset: (pid: string, id: string, data: Partial<Asset>) =>
+    request<Asset>(`/api/projects/${pid}/assets/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteAsset: (pid: string, id: string) =>
+    request<void>(`/api/projects/${pid}/assets/${id}`, { method: 'DELETE' }),
+
+  listAiSessions: (pid: string) => request<AiSession[]>(`/api/projects/${pid}/ai/sessions`),
+  createAiSession: (pid: string, title?: string) =>
+    request<AiSession>(`/api/projects/${pid}/ai/sessions`, {
+      method: 'POST',
+      body: JSON.stringify({ title: title || '新讨论' }),
+    }),
+  deleteAiSession: (pid: string, sessionId: string) =>
+    request<void>(`/api/projects/${pid}/ai/sessions/${sessionId}`, { method: 'DELETE' }),
+  listAiMessages: (pid: string, sessionId: string) =>
+    request<AiMessage[]>(`/api/projects/${pid}/ai/sessions/${sessionId}/messages`),
+  aiChat: (pid: string, sessionId: string, content: string) =>
+    request<{ reply: string }>(`/api/projects/${pid}/ai/sessions/${sessionId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
+  getAiPrompt: (pid: string) => request<{ prompt: string }>(`/api/projects/${pid}/ai/prompt`),
+  setAiPrompt: (pid: string, prompt: string) =>
+    request<{ prompt: string }>(`/api/projects/${pid}/ai/prompt`, {
+      method: 'PUT',
+      body: JSON.stringify({ prompt }),
+    }),
+
+  listCovers: (pid: string) => request<CoverTask[]>(`/api/projects/${pid}/covers`),
+  createCover: (pid: string, prompt: string, params: Record<string, unknown>) =>
+    request<CoverTask>(`/api/projects/${pid}/covers`, {
+      method: 'POST',
+      body: JSON.stringify({ prompt, params }),
+    }),
+
+  listAllLinks: (pid: string) => request<EntityLink[]>(`/api/projects/${pid}/links`),
+  search: (pid: string, query: string) =>
+    request<SearchResult[]>(`/api/projects/${pid}/search`, {
+      method: 'POST',
+      body: JSON.stringify({ query }),
     }),
 };

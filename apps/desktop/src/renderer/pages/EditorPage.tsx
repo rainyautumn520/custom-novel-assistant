@@ -5,6 +5,10 @@ import { api } from '../api';
 
 type SaveState = 'saved' | 'saving' | 'failed';
 
+function draftKey(projectId: string, chapterId: string) {
+  return `ai-novel-draft:${projectId}:${chapterId}`;
+}
+
 function countWords(text: string): number {
   return text.replace(/\s/g, '').length;
 }
@@ -22,6 +26,7 @@ export default function EditorPage({
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
   const [saveState, setSaveState] = useState<SaveState>('saved');
+  const [fileIntegrity, setFileIntegrity] = useState('ok');
   const [error, setError] = useState('');
   const timerRef = useRef<number | null>(null);
   const contentRef = useRef(content);
@@ -42,26 +47,6 @@ export default function EditorPage({
     return chs;
   }, [projectId]);
 
-  const selectChapter = useCallback(
-    async (chapterId: string) => {
-      const detail = await api.getChapter(projectId, chapterId);
-      setSelectedId(chapterId);
-      setTitle(detail.title);
-      setContent(detail.contentMd);
-      setSaveState('saved');
-    },
-    [projectId],
-  );
-
-  useEffect(() => {
-    void load()
-      .then((chs) => {
-        const target = focusChapterId ?? chs[0]?.id ?? null;
-        if (target) return selectChapter(target);
-      })
-      .catch((e) => setError(String(e)));
-  }, [load, selectChapter, focusChapterId]);
-
   const doSave = useCallback(async () => {
     const id = selectedIdRef.current;
     if (!id) return;
@@ -75,6 +60,7 @@ export default function EditorPage({
       setChapters((prev) =>
         prev.map((c) => (c.id === saved.id ? { ...c, title: saved.title, wordCount: saved.wordCount } : c)),
       );
+      localStorage.removeItem(draftKey(projectId, id));
       setSaveState('saved');
     } catch (e) {
       setError(String(e));
@@ -82,11 +68,51 @@ export default function EditorPage({
     }
   }, [projectId]);
 
+  const selectChapter = useCallback(
+    async (chapterId: string) => {
+      const detail = await api.getChapter(projectId, chapterId);
+      setSelectedId(chapterId);
+      setTitle(detail.title);
+      setContent(detail.contentMd);
+      setFileIntegrity(detail.fileIntegrity);
+      setSaveState('saved');
+
+      const raw = localStorage.getItem(draftKey(projectId, chapterId));
+      if (raw) {
+        try {
+          const draft = JSON.parse(raw) as { title: string; contentMd: string };
+          const hasNewerDraft =
+            draft.contentMd !== detail.contentMd || draft.title !== detail.title;
+          if (hasNewerDraft && window.confirm('检测到未保存的本地草稿，恢复它？')) {
+            setTitle(draft.title);
+            setContent(draft.contentMd);
+            setSaveState('saving');
+            setTimeout(() => void doSave(), 300);
+          } else {
+            localStorage.removeItem(draftKey(projectId, chapterId));
+          }
+        } catch {
+          localStorage.removeItem(draftKey(projectId, chapterId));
+        }
+      }
+    },
+    [projectId, doSave],
+  );
+
   const scheduleSave = useCallback(() => {
     setSaveState('saving');
     if (timerRef.current) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => void doSave(), 1000);
   }, [doSave]);
+
+  useEffect(() => {
+    void load()
+      .then((chs) => {
+        const target = focusChapterId ?? chs[0]?.id ?? null;
+        if (target) return selectChapter(target);
+      })
+      .catch((e) => setError(String(e)));
+  }, [load, selectChapter, focusChapterId]);
 
   useEffect(() => {
     return () => {
@@ -105,6 +131,27 @@ export default function EditorPage({
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [doSave]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const timer = window.setTimeout(() => {
+      localStorage.setItem(
+        draftKey(projectId, selectedId),
+        JSON.stringify({ title: titleRef.current, contentMd: contentRef.current }),
+      );
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [content, title, selectedId, projectId]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (saveState === 'saving' || saveState === 'failed') {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [saveState]);
 
   const linkedNode = useMemo(
     () =>
@@ -166,6 +213,9 @@ export default function EditorPage({
           </div>
 
           {error && <div className="page-error">{error}</div>}
+          {fileIntegrity === 'modified' && (
+            <div className="page-error">正文文件被外部修改过，继续编辑保存会覆盖外部内容。可先导出备份。</div>
+          )}
 
           <textarea
             className="write-textarea"

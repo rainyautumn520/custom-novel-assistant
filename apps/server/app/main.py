@@ -4,13 +4,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    assets,
+    ai,
     categories,
     chapters,
     characters,
+    covers,
     exports,
+    graph,
     links,
     outlines,
     projects,
+    search,
     settings,
 )
 from app.config import settings as app_settings
@@ -47,6 +52,11 @@ app.include_router(outlines.router)
 app.include_router(chapters.router)
 app.include_router(exports.router)
 app.include_router(links.router)
+app.include_router(assets.router)
+app.include_router(ai.router)
+app.include_router(covers.router)
+app.include_router(graph.router)
+app.include_router(search.router)
 
 
 @app.get("/api/health", tags=["meta"])

@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@ai-novel-ide/shared-types": "*",
+    "@types/d3": "^7.4.3",
+    "d3": "^7.9.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

@@ -27,8 +27,8 @@ def create_chapter(
 @router.get("/{chapter_id}", response_model=ChapterDetail)
 def get_chapter(project_id: str, chapter_id: str, session: Session = Depends(get_app_session)):
     project_service.get_project_or_404(session, project_id)
-    chapter, content = chapter_service.get_chapter(project_id, chapter_id)
-    return {**chapter.__dict__, "content_md": content}
+    chapter, content, integrity = chapter_service.get_chapter(project_id, chapter_id)
+    return {**chapter.__dict__, "content_md": content, "file_integrity": integrity}
 
 
 @router.put("/{chapter_id}", response_model=ChapterDetail)
@@ -39,10 +39,10 @@ def update_chapter(
     session: Session = Depends(get_app_session),
 ):
     project_service.get_project_or_404(session, project_id)
-    chapter, content = chapter_service.update_chapter(
+    chapter, content, integrity = chapter_service.update_chapter(
         project_id, chapter_id, title=payload.title, content_md=payload.content_md
     )
-    return {**chapter.__dict__, "content_md": content}
+    return {**chapter.__dict__, "content_md": content, "file_integrity": integrity}
 
 
 @router.delete("/{chapter_id}", status_code=204)

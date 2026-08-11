@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react';
 import type { Project } from '@ai-novel-ide/shared-types';
 
 import { api } from './api';
+import AiPage from './pages/AiPage';
 import CharactersPage from './pages/CharactersPage';
+import CoversPage from './pages/CoversPage';
 import EditorPage from './pages/EditorPage';
 import ExportPage from './pages/ExportPage';
+import GraphPage from './pages/GraphPage';
 import OutlinePage from './pages/OutlinePage';
+import AssetsPage from './pages/AssetsPage';
 import SettingsPage from './pages/SettingsPage';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
 
 type View = 'home' | 'workspace';
 
-const NAV_ITEMS = ['概览', '设定', '人物', '大纲', '正文', '素材', '导出'];
+const NAV_ITEMS = ['概览', '设定', '人物', '大纲', '正文', '素材', '导出', 'AI 讨论', '封面工坊', '图谱'];
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -112,7 +116,7 @@ export default function App() {
         <div className="spacer" />
         <span>Ctrl S 保存</span>
         <span>Ctrl K 命令</span>
-        <span>v0.4</span>
+        <span>v0.5</span>
       </footer>
     </div>
   );
@@ -190,6 +194,10 @@ function Workspace({
     return <EditorPage projectId={project.id} focusChapterId={focusChapterId} />;
   if (nav === '人物') return <CharactersPage projectId={project.id} />;
   if (nav === '导出') return <ExportPage projectId={project.id} />;
+  if (nav === '素材') return <AssetsPage projectId={project.id} />;
+  if (nav === 'AI 讨论') return <AiPage projectId={project.id} />;
+  if (nav === '封面工坊') return <CoversPage projectId={project.id} />;
+  if (nav === '图谱') return <GraphPage projectId={project.id} />;
 
   return (
     <div className="page-pad">

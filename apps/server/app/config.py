@@ -11,6 +11,12 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_model: str = "deepseek-chat"
+    seedream_api_key: str = ""
+    seedream_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
+    seedream_model: str = "doubao-seedream-5-0"
 
     model_config = SettingsConfigDict(env_prefix="AI_NOVEL_")
 

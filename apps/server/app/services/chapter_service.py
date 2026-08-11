@@ -52,7 +52,7 @@ def create_chapter(project_id: str, title: str, outline_node_id: str | None = No
         return chapter
 
 
-def get_chapter(project_id: str, chapter_id: str) -> tuple[Chapter, str]:
+def get_chapter(project_id: str, chapter_id: str) -> tuple[Chapter, str, str]:
     from fastapi import HTTPException
 
     with project_session(project_id) as session:
@@ -61,7 +61,8 @@ def get_chapter(project_id: str, chapter_id: str) -> tuple[Chapter, str]:
             raise HTTPException(status_code=404, detail="章节不存在")
         file_path = project_db_path(project_id).parent / chapter.file_path
         content = file_path.read_text(encoding="utf-8") if file_path.exists() else ""
-        return chapter, content
+        integrity = "ok" if _sha256(content) == chapter.file_hash else "modified"
+        return chapter, content, integrity
 
 
 def update_chapter(
@@ -69,7 +70,7 @@ def update_chapter(
     chapter_id: str,
     title: str | None = None,
     content_md: str | None = None,
-) -> tuple[Chapter, str]:
+) -> tuple[Chapter, str, str]:
     from fastapi import HTTPException
 
     with project_session(project_id) as session:
@@ -95,7 +96,7 @@ def update_chapter(
             chapter.title = title.strip() or chapter.title
         session.commit()
         session.refresh(chapter)
-        return chapter, content_md if content_md is not None else current
+        return chapter, content_md if content_md is not None else current, "ok"
 
 
 def _create_snapshot(project_id: str, root: Path, chapter_id: str, content: str) -> None:

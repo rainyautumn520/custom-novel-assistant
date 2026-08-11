@@ -123,6 +123,11 @@ async function seed() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ settingIds: [settingsList[0].id] }),
   });
+  await fetch(`${API}/api/projects/${pid}/assets`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: '北境笔记', contentMd: '灵脉分布与地图灵感。', tags: ['地图'] }),
+  });
   return project;
 }
 
@@ -181,6 +186,23 @@ await page.screenshot({ path: path.join(OUT, 'preview-app-export.png') });
 await page.getByRole('button', { name: '开始导出' }).click();
 await page.waitForSelector('.export-summary', { timeout: 10000 });
 await page.screenshot({ path: path.join(OUT, 'preview-app-export-done.png') });
+
+await page.getByRole('button', { name: '素材', exact: true }).click();
+await page.waitForSelector('text=北境笔记');
+await page.screenshot({ path: path.join(OUT, 'preview-app-assets.png') });
+
+await page.getByRole('button', { name: 'AI 讨论', exact: true }).click();
+await page.waitForSelector('.ai-layout');
+await page.screenshot({ path: path.join(OUT, 'preview-app-ai.png') });
+
+await page.getByRole('button', { name: '封面工坊', exact: true }).click();
+await page.waitForSelector('text=生成封面');
+await page.screenshot({ path: path.join(OUT, 'preview-app-covers.png') });
+
+await page.getByRole('button', { name: '图谱', exact: true }).click();
+await page.waitForSelector('svg circle', { timeout: 10000 });
+await page.waitForTimeout(1200);
+await page.screenshot({ path: path.join(OUT, 'preview-app-graph.png') });
 
 console.log('E2E smoke passed, screenshots ->', OUT);
 await browser.close();

@@ -3,7 +3,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import categories, chapters, characters, outlines, projects, settings
+from app.api import (
+    categories,
+    chapters,
+    characters,
+    exports,
+    links,
+    outlines,
+    projects,
+    settings,
+)
 from app.config import settings as app_settings
 from app.core.database import ensure_app_db
 
@@ -36,6 +45,8 @@ app.include_router(characters.router)
 app.include_router(categories.router)
 app.include_router(outlines.router)
 app.include_router(chapters.router)
+app.include_router(exports.router)
+app.include_router(links.router)
 
 
 @app.get("/api/health", tags=["meta"])

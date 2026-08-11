@@ -97,6 +97,32 @@ async function seed() {
     content_md:
       '晨雾还未散尽，天元学宫的牌楼已经遥遥在望。\n\n张小凡攥紧手里的报到文书，指节微微发白。牌楼下立着一个人——墨色长发，左腕一道浅色灵纹，正是林晚。\n\n"你迟到了。"林晚说。',
   });
+
+  const char = (body) =>
+    fetch(`${API}/api/projects/${pid}/characters`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+  const linwan = await char({
+    name: '林晚',
+    identity: '天元学宫内门弟子',
+    personality: '外冷内热，护短',
+    tags: ['女主'],
+    status: 'confirmed',
+  });
+  await char({
+    name: '张小凡',
+    identity: '灵脉村少年',
+    personality: '坚韧，好奇心重',
+    tags: ['男主'],
+  });
+  const settingsList = await fetch(`${API}/api/projects/${pid}/settings`).then((r) => r.json());
+  await fetch(`${API}/api/projects/${pid}/characters/${linwan.id}/links`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ settingIds: [settingsList[0].id] }),
+  });
   return project;
 }
 
@@ -106,6 +132,7 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 page.on('pageerror', (e) => console.log('PAGE ERROR:', e.message));
+page.on('dialog', (d) => d.accept());
 page.on('console', (m) => {
   if (m.type() === 'error') console.log('CONSOLE ERROR:', m.text());
 });
@@ -142,6 +169,18 @@ await page.locator('.write-textarea').fill(
 );
 await page.waitForSelector('text=已保存', { timeout: 10000 });
 await page.screenshot({ path: path.join(OUT, 'preview-app-editor.png') });
+
+await page.getByRole('button', { name: '人物', exact: true }).click();
+await page.waitForSelector('text=林晚');
+await page.locator('.char-card', { hasText: '林晚' }).click();
+await page.screenshot({ path: path.join(OUT, 'preview-app-characters.png') });
+
+await page.getByRole('button', { name: '导出', exact: true }).click();
+await page.waitForSelector('.preview-item');
+await page.screenshot({ path: path.join(OUT, 'preview-app-export.png') });
+await page.getByRole('button', { name: '开始导出' }).click();
+await page.waitForSelector('.export-summary', { timeout: 10000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-export-done.png') });
 
 console.log('E2E smoke passed, screenshots ->', OUT);
 await browser.close();

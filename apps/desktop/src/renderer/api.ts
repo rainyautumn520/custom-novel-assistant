@@ -1,11 +1,36 @@
 import type {
   Chapter,
   ChapterDetail,
+  Character,
+  EntityLink,
   OutlineNode,
   Project,
   Setting,
   SettingCategory,
 } from '@ai-novel-ide/shared-types';
+
+export interface ExportResult {
+  path: string;
+  wordCount: number;
+  chaptersExported: number;
+  chaptersSkipped: number;
+  skippedTitles: string[];
+}
+
+export interface ExportPreviewItem {
+  volumeTitle: string;
+  chapterTitle: string;
+  chapterId: string | null;
+  wordCount: number;
+  status: string;
+}
+
+export interface ExportPreview {
+  totalWords: number;
+  exportedCount: number;
+  skippedCount: number;
+  items: ExportPreviewItem[];
+}
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
 
@@ -93,4 +118,48 @@ export const api = {
     }),
   deleteChapter: (pid: string, id: string) =>
     request<void>(`/api/projects/${pid}/chapters/${id}`, { method: 'DELETE' }),
+
+  listCharacters: (pid: string) => request<Character[]>(`/api/projects/${pid}/characters`),
+  createCharacter: (pid: string, name: string) =>
+    request<Character>(`/api/projects/${pid}/characters`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+  updateCharacter: (pid: string, id: string, data: Partial<Character>) =>
+    request<Character>(`/api/projects/${pid}/characters/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteCharacter: (pid: string, id: string) =>
+    request<void>(`/api/projects/${pid}/characters/${id}`, { method: 'DELETE' }),
+  listCharacterLinks: (pid: string, characterId: string) =>
+    request<EntityLink[]>(`/api/projects/${pid}/characters/${characterId}/links`),
+  replaceCharacterLinks: (pid: string, characterId: string, settingIds: string[]) =>
+    request<EntityLink[]>(`/api/projects/${pid}/characters/${characterId}/links`, {
+      method: 'PUT',
+      body: JSON.stringify({ settingIds }),
+    }),
+
+  exportPreview: (pid: string) =>
+    request<ExportPreview>(`/api/projects/${pid}/exports/preview`),
+  exportSingle: (
+    pid: string,
+    chapterId: string,
+    includeTitle: boolean,
+    outputPath?: string,
+  ) =>
+    request<ExportResult>(`/api/projects/${pid}/exports/single`, {
+      method: 'POST',
+      body: JSON.stringify({ chapterId, includeTitle, outputPath: outputPath || null }),
+    }),
+  exportBook: (
+    pid: string,
+    includeVolume: boolean,
+    includeChapter: boolean,
+    outputPath?: string,
+  ) =>
+    request<ExportResult>(`/api/projects/${pid}/exports/book`, {
+      method: 'POST',
+      body: JSON.stringify({ includeVolume, includeChapter, outputPath: outputPath || null }),
+    }),
 };

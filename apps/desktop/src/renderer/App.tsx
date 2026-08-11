@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import type { Project } from '@ai-novel-ide/shared-types';
 
 import { api } from './api';
+import CharactersPage from './pages/CharactersPage';
 import EditorPage from './pages/EditorPage';
+import ExportPage from './pages/ExportPage';
 import OutlinePage from './pages/OutlinePage';
 import SettingsPage from './pages/SettingsPage';
 
@@ -186,12 +188,14 @@ function Workspace({
     return <OutlinePage projectId={project.id} onOpenChapter={onOpenChapter} />;
   if (nav === '正文')
     return <EditorPage projectId={project.id} focusChapterId={focusChapterId} />;
+  if (nav === '人物') return <CharactersPage projectId={project.id} />;
+  if (nav === '导出') return <ExportPage projectId={project.id} />;
 
   return (
     <div className="page-pad">
       <h1>{project.name}</h1>
       <p className="muted">
-        当前模块：{nav}（该模块开发中。已完成：设定 / 大纲 / 正文）
+        当前模块：{nav}（该模块开发中。已完成：设定 / 人物 / 大纲 / 正文 / 导出）
       </p>
       <div className="stats">
         <div className="stat"><div className="num">0</div><div className="lbl">总字数</div></div>

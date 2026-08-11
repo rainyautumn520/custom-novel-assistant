@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Novel IDE — UI 原型</title>
+<style>
+:root {
+  --bg: #1b1b20;
+  --panel: #232329;
+  --panel-2: #2b2b33;
+  --border: #34343d;
+  --hover: #2f2f38;
+  --active: #3a3a45;
+  --text: #e8e8ec;
+  --text-2: #a0a0ac;
+  --text-3: #6f6f7a;
+  --accent: #7c6ff0;
+  --accent-hover: #8f84f5;
+  --success: #4caf7d;
+  --warning: #d9a13b;
+  --danger: #e05d5d;
+  --info: #5b9bd5;
+  --radius: 8px;
+  --mono: ui-monospace, "JetBrains Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+input, textarea { font: inherit; color: inherit; }
+.mono { font-family: var(--mono); }
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+.logo-mark {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #4aa3ff);
+  display: grid; place-items: center; font-size: 12px; color: #fff;
+}
+.project-switch {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px; color: var(--text);
+}
+.global-search {
+  flex: 1; max-width: 420px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px; color: var(--text-3);
+  display: flex; align-items: center; gap: 8px;
+}
+.global-search kbd {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+  border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px;
+}
+.topbar .spacer { flex: 1; }
+.save-state {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--text-2);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
+.dot.saving { background: var(--warning); animation: pulse 1s infinite; }
+.dot.saved { background: var(--success); }
+.dot.failed { background: var(--danger); }
+@keyframes pulse { 50% { opacity: .35; } }
+
+/* ---------- Shell ---------- */
+.shell { flex: 1; display: flex; min-height: 0; }
+.sidebar {
+  width: 220px; flex: 0 0 220px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 10px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+  transition: width .15s ease;
+}
+.sidebar.collapsed { width: 56px; flex-basis: 56px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px; color: var(--text-2);
+  font-size: 13.5px; text-align: left; white-space: nowrap; overflow: hidden;
+}
+.nav-item:hover { background: var(--hover); color: var(--text); }
+.nav-item.active { background: var(--active); color: var(--text); }
+.nav-item.active .nav-ico { color: var(--accent); }
+.nav-item .nav-ico { width: 18px; text-align: center; flex: 0 0 18px; }
+.nav-item .label { overflow: hidden; text-overflow: ellipsis; }
+.nav-group {
+  font-size: 11px; color: var(--text-3); padding: 10px 10px 4px;
+  white-space: nowrap; overflow: hidden;
+}
+.sidebar.collapsed .label, .sidebar.collapsed .nav-group { display: none; }
+
+.main { flex: 1; min-width: 0; overflow: auto; }
+.page { display: none; height: 100%; }
+.page.active { display: flex; flex-direction: column; }
+.page-pad { padding: 24px 28px; }
+
+/* ---------- Home ---------- */
+.home-hero { padding: 40px 36px 24px; }
+.home-hero h1 { font-size: 24px; margin-bottom: 4px; }
+.home-hero p { color: var(--text-2); }
+.continue-card {
+  margin: 8px 36px 20px; padding: 16px 18px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  display: flex; align-items: center; gap: 14px;
+}
+.continue-card .cover {
+  width: 44px; height: 58px; border-radius: 6px;
+  background: linear-gradient(135deg, #2c3e67, #4aa3ff);
+  flex: 0 0 44px;
+}
+.continue-card .meta { flex: 1; }
+.continue-card .meta .title { font-size: 16px; font-weight: 600; }
+.continue-card .meta .sub { color: var(--text-2); font-size: 13px; }
+.btn { border-radius: 6px; padding: 7px 14px; font-size: 13.5px; }
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.secondary { background: var(--panel-2); border: 1px solid var(--border); }
+.btn.secondary:hover { border-color: var(--text-3); }
+.btn.ghost { color: var(--text-2); }
+.btn.ghost:hover { background: var(--hover); color: var(--text); }
+.section { margin: 22px 36px; }
+.section h2 { font-size: 13px; color: var(--text-3); font-weight: 500; margin-bottom: 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px; cursor: pointer;
+}
+.card:hover { border-color: var(--text-3); }
+.card .cover {
+  height: 96px; border-radius: 6px; margin-bottom: 10px;
+  background: linear-gradient(135deg, #2c3e67, #4aa3ff);
+}
+.card .cover.c2 { background: linear-gradient(135deg, #4a2c67, #c85bbf); }
+.card .cover.c3 { background: linear-gradient(135deg, #2c5e4c, #3fc98e); }
+.card .name { font-size: 14px; font-weight: 600; }
+.card .sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.new-card {
+  border: 1px dashed var(--text-3); background: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 168px; color: var(--text-2); gap: 6px;
+}
+.new-card:hover { color: var(--text); border-color: var(--accent); }
+
+/* ---------- Workspace page header ---------- */
+.page-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 28px 12px;
+}
+.page-head h1 { font-size: 20px; font-weight: 600; }
+.page-head .spacer { flex: 1; }
+.search-box {
+  width: 240px; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px; color: var(--text-3);
+}
+.search-box input { background: none; border: none; outline: none; width: 100%; color: var(--text); }
+
+/* ---------- Stats / overview ---------- */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 28px 16px; }
+.stat {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.stat .num { font-family: var(--mono); font-size: 22px; font-weight: 600; }
+.stat .lbl { color: var(--text-2); font-size: 12px; margin-top: 2px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 28px 24px; }
+.panel-box { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.panel-box h3 { font-size: 13px; color: var(--text-2); font-weight: 500; margin-bottom: 10px; }
+.row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px; cursor: pointer;
+}
+.row:hover { background: var(--hover); }
+.row .title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .sub { color: var(--text-3); font-size: 12px; }
+.todo { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; }
+.todo .check {
+  width: 15px; height: 15px; border: 1px solid var(--text-3); border-radius: 4px;
+  flex: 0 0 15px;
+}
+.todo.done .check { background: var(--success); border-color: var(--success); }
+.todo.done span { color: var(--text-3); text-decoration: line-through; }
+
+/* ---------- Tags / badges ---------- */
+.tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text-2);
+}
+.tag.confirmed { color: var(--success); border-color: rgba(76,175,125,.4); background: rgba(76,175,125,.1); }
+.tag.draft { color: var(--text-2); }
+.tag.volume { color: var(--info); }
+.tag.chapter { color: var(--accent); }
+.tag.beat { color: var(--text-2); }
+.badge { font-size: 11px; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--border); color: var(--text-2); }
+.badge.active { color: var(--warning); border-color: rgba(217,161,59,.4); background: rgba(217,161,59,.08); }
+.badge.done { color: var(--success); border-color: rgba(76,175,125,.4); background: rgba(76,175,125,.08); }
+
+/* ---------- Settings library ---------- */
+.lib-layout { flex: 1; display: flex; min-height: 0; }
+.lib-tree {
+  width: 190px; flex: 0 0 190px; border-right: 1px solid var(--border);
+  padding: 12px 10px; overflow: auto;
+}
+.lib-list { width: 300px; flex: 0 0 300px; border-right: 1px solid var(--border); overflow: auto; padding: 8px; }
+.lib-editor { flex: 1; min-width: 0; padding: 18px 22px; overflow: auto; }
+.tree-item { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 6px; cursor: pointer; color: var(--text-2); font-size: 13px; }
+.tree-item:hover { background: var(--hover); color: var(--text); }
+.tree-item.active { background: var(--active); color: var(--text); }
+.tree-item .caret { width: 14px; flex: 0 0 14px; color: var(--text-3); }
+.tree-item .count { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.indent-1 { padding-left: 26px; }
+.list-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; border-radius: 6px; cursor: pointer;
+}
+.list-row:hover { background: var(--hover); }
+.list-row.active { background: var(--active); }
+.list-row .title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; }
+.list-row .updated { color: var(--text-3); font-size: 11px; font-family: var(--mono); }
+.editor-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.editor-head input.title {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 18px; font-weight: 600; color: var(--text);
+}
+.md-editor {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius);
+  min-height: 260px; padding: 14px 16px; color: var(--text-2); font-size: 15px; line-height: 1.8;
+}
+.md-editor .cursor { color: var(--accent); }
+.ref-line { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: var(--text-2); font-size: 13px; }
+.ref-line .link { color: var(--info); }
+
+/* ---------- Characters ---------- */
+.char-layout { flex: 1; display: flex; min-height: 0; }
+.char-list { width: 320px; flex: 0 0 320px; border-right: 1px solid var(--border); overflow: auto; padding: 10px; }
+.char-card {
+  display: flex; gap: 12px; padding: 10px; border-radius: var(--radius);
+  border: 1px solid var(--border); margin-bottom: 8px; cursor: pointer; background: var(--panel);
+}
+.char-card:hover { border-color: var(--text-3); }
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex: 0 0 38px;
+  background: linear-gradient(135deg, var(--accent), #4aa3ff);
+  display: grid; place-items: center; font-size: 14px; color: #fff;
+}
+.char-card .name { font-weight: 600; }
+.char-card .role { color: var(--text-2); font-size: 12px; }
+.char-detail { flex: 1; padding: 18px 24px; overflow: auto; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; color: var(--text-3); margin-bottom: 5px; }
+.field .value { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 13.5px; }
+
+/* ---------- Outline ---------- */
+.outline-layout { flex: 1; display: flex; min-height: 0; }
+.outline-tree {
+  width: 36%; min-width: 300px; border-right: 1px solid var(--border);
+  overflow: auto; padding: 12px 10px;
+}
+.outline-editor { flex: 1; min-width: 0; padding: 18px 24px; overflow: auto; }
+.outline-editor .title-input {
+  width: 100%; background: none; border: none; outline: none;
+  font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 14px;
+}
+.textarea-field {
+  width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 9px 12px; min-height: 64px; color: var(--text-2);
+  font-size: 13.5px; margin-bottom: 14px;
+}
+.editor-side { width: 240px; flex: 0 0 240px; border-left: 1px solid var(--border); padding: 16px; overflow: auto; }
+.editor-side h4 { font-size: 12px; color: var(--text-3); font-weight: 500; margin: 0 0 8px; }
+
+/* ---------- Editor ---------- */
+.editor-layout { flex: 1; display: flex; min-height: 0; }
+.chapter-tree { width: 200px; flex: 0 0 200px; border-right: 1px solid var(--border); overflow: auto; padding: 12px 10px; }
+.write-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.write-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 18px;
+  border-bottom: 1px solid var(--border); color: var(--text-3); font-size: 12px;
+}
+.write-toolbar .spacer { flex: 1; }
+.write-content { flex: 1; overflow: auto; padding: 28px 42px; }
+.chapter-title { font-size: 20px; font-weight: 600; margin-bottom: 18px; }
+.prose { font-size: 16px; line-height: 1.8; color: #d6d6dc; max-width: 720px; }
+.prose p { margin-bottom: 12px; }
+.context-panel {
+  width: 300px; flex: 0 0 300px; border-left: 1px solid var(--border);
+  background: var(--panel); overflow: auto; padding: 16px;
+}
+.context-panel.hidden { display: none; }
+.ctx-section { margin-bottom: 18px; }
+.ctx-section h4 { font-size: 12px; color: var(--text-3); font-weight: 500; margin-bottom: 8px; }
+.contract-box {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 12px; font-size: 12.5px; color: var(--text-2); margin-bottom: 8px;
+}
+.contract-box b { color: var(--text); font-weight: 500; }
+.ai-card {
+  border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 12px;
+  color: var(--text-2); font-size: 12.5px; margin-top: 8px;
+}
+
+/* ---------- Export ---------- */
+.export-wrap { padding: 24px 28px; max-width: 640px; }
+.radio-row { display: flex; gap: 10px; margin-bottom: 18px; }
+.radio-pill {
+  border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px;
+  background: var(--panel-2); color: var(--text-2); font-size: 13px;
+}
+.radio-pill.active { border-color: var(--accent); color: var(--text); background: rgba(124,111,240,.12); }
+.opt-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.opt-row .lbl { flex: 1; color: var(--text-2); }
+.opt-row .val { color: var(--text); font-family: var(--mono); font-size: 13px; }
+.export-summary { margin-top: 18px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; color: var(--text-2); font-size: 13px; }
+.export-summary .num { color: var(--text); font-family: var(--mono); }
+.export-actions { margin-top: 18px; display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ---------- Status bar ---------- */
+.statusbar {
+  height: 28px; flex: 0 0 28px;
+  display: flex; align-items: center; gap: 18px;
+  padding: 0 16px; background: var(--panel); border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-3);
+}
+.statusbar .spacer { flex: 1; }
+.statusbar kbd { font-family: var(--mono); border: 1px solid var(--border); border-radius: 3px; padding: 0 5px; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="logo" data-go="home">
+      <span class="logo-mark">书</span>
+      <span>AI Novel IDE</span>
+    </button>
+    <button class="project-switch" data-go="overview">
+      <span>▦</span> 大梦山海 <span style="color:var(--text-3)">▾</span>
+    </button>
+    <div class="global-search">⌕ <span>搜索设定、人物、章节…</span><kbd>Ctrl K</kbd></div>
+    <div class="spacer"></div>
+    <div class="save-state" id="saveState"><span class="dot saved"></span><span id="saveText">已保存</span></div>
+    <button class="btn ghost" title="设置">⚙</button>
+  </header>
+
+  <div class="shell">
+    <nav class="sidebar" id="sidebar">
+      <button class="nav-item" data-go="overview"><span class="nav-ico">◧</span><span class="label">概览</span></button>
+      <button class="nav-item" data-go="settings"><span class="nav-ico">☷</span><span class="label">设定</span></button>
+      <button class="nav-item" data-go="characters"><span class="nav-ico">◉</span><span class="label">人物</span></button>
+      <button class="nav-item" data-go="outline"><span class="nav-ico">≣</span><span class="label">大纲</span></button>
+      <button class="nav-item" data-go="editor"><span class="nav-ico">✎</span><span class="label">正文</span></button>
+      <button class="nav-item" data-go="assets"><span class="nav-ico">▤</span><span class="label">素材</span></button>
+      <button class="nav-item" data-go="export"><span class="nav-ico">⇪</span><span class="label">导出</span></button>
+      <div class="nav-group">v0.2</div>
+      <button class="nav-item" data-go="export"><span class="nav-ico">✉</span><span class="label">AI 讨论</span></button>
+      <button class="nav-item" data-go="export"><span class="nav-ico">▣</span><span class="label">封面工坊</span></button>
+    </nav>
+
+    <main class="main" id="main">
+
+      <!-- P01 首页 -->
+      <section class="page" id="page-home">
+        <div class="home-hero">
+          <h1>继续创作</h1>
+          <p>你的作品都在本地，随时继续。</p>
+        </div>
+        <div class="continue-card">
+          <div class="cover"></div>
+          <div class="meta">
+            <div class="title">《大梦山海》</div>
+            <div class="sub">第 37 章 · 2,148 字 · 今天 14:32</div>
+          </div>
+          <button class="btn primary" data-go="editor">继续写作 →</button>
+        </div>
+        <div class="section">
+          <h2>最近作品</h2>
+          <div class="cards">
+            <div class="card" data-go="overview">
+              <div class="cover"></div>
+              <div class="name">大梦山海</div>
+              <div class="sub">2.1 万字 · 更新于今天</div>
+            </div>
+            <div class="card" data-go="overview">
+              <div class="cover c2"></div>
+              <div class="name">剑起沧澜</div>
+              <div class="sub">8.7 万字 · 更新于昨天</div>
+            </div>
+            <div class="card" data-go="overview">
+              <div class="cover c3"></div>
+              <div class="name">星海拾遗</div>
+              <div class="sub">3.4 万字 · 更新于 3 天前</div>
+            </div>
+            <div class="card new-card" data-go="new">
+              <div style="font-size:22px">＋</div>
+              <div>新建作品</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P03 概览 -->
+      <section class="page" id="page-overview">
+        <div class="page-head">
+          <h1>大梦山海</h1>
+          <span class="tag">玄幻</span>
+          <div class="spacer"></div>
+          <button class="btn ghost">✚ 素材</button>
+          <button class="btn secondary" data-go="editor">写正文</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="num">2.1万</div><div class="lbl">总字数</div></div>
+          <div class="stat"><div class="num">37</div><div class="lbl">章节</div></div>
+          <div class="stat"><div class="num">4,260</div><div class="lbl">本周新增</div></div>
+          <div class="stat"><div class="num">2,148</div><div class="lbl">今日新增</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel-box">
+            <h3>最近章节</h3>
+            <div class="row"><span class="title">第 37 章 · 山海令</span><span class="sub">2,148 字 · 今天</span></div>
+            <div class="row"><span class="title">第 36 章 · 北境来客</span><span class="sub">2,301 字 · 昨天</span></div>
+            <div class="row"><span class="title">第 35 章 · 暗流</span><span class="sub">2,087 字 · 3 天前</span></div>
+          </div>
+          <div class="panel-box">
+            <h3>待办引导</h3>
+            <div class="todo done"><span class="check"></span><span>建立第一条设定</span></div>
+            <div class="todo done"><span class="check"></span><span>创建第一卷大纲</span></div>
+            <div class="todo"><span class="check"></span><span>为第 38 章写章纲</span></div>
+            <div class="todo"><span class="check"></span><span>整理素材：北境设定图</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P04 设定库 -->
+      <section class="page" id="page-settings">
+        <div class="page-head">
+          <h1>设定</h1>
+          <div class="spacer"></div>
+          <div class="search-box"><input placeholder="搜索设定…"></div>
+          <button class="btn primary">＋ 新建设定</button>
+        </div>
+        <div class="lib-layout">
+          <div class="lib-tree">
+            <div class="tree-item active"><span class="caret">▾</span><span>全部</span><span class="count">15</span></div>
+            <div class="tree-item"><span class="caret">▾</span><span>规则</span><span class="count">3</span></div>
+            <div class="tree-item indent-1"><span class="caret"></span><span>灵气复苏</span></div>
+            <div class="tree-item indent-1"><span class="caret"></span><span>境界体系</span></div>
+            <div class="tree-item"><span class="caret">▸</span><span>地理</span><span class="count">5</span></div>
+            <div class="tree-item"><span class="caret">▸</span><span>历史</span><span class="count">3</span></div>
+            <div class="tree-item"><span class="caret">▸</span><span>势力</span><span class="count">4</span></div>
+            <div style="height:12px"></div>
+            <button class="btn ghost" style="width:100%;text-align:left">＋ 新建分类</button>
+          </div>
+          <div class="lib-list">
+            <div class="list-row active">
+              <span class="title">灵气复苏</span><span class="tag confirmed">已确认</span><span class="updated">07-30</span>
+            </div>
+            <div class="list-row">
+              <span class="title">天元大陆地理总纲</span><span class="tag confirmed">已确认</span><span class="updated">07-28</span>
+            </div>
+            <div class="list-row">
+              <span class="title">北境联盟</span><span class="tag draft">草稿</span><span class="updated">07-25</span>
+            </div>
+            <div class="list-row">
+              <span class="title">灵脉枯竭事件</span><span class="tag draft">草稿</span><span class="updated">07-20</span>
+            </div>
+            <div class="list-row">
+              <span class="title">山海令来历</span><span class="tag confirmed">已确认</span><span class="updated">07-18</span>
+            </div>
+          </div>
+          <div class="lib-editor">
+            <div class="editor-head">
+              <input class="title" value="灵气复苏">
+              <span class="tag confirmed">已确认设定</span>
+            </div>
+            <div class="md-editor">
+              灵气复苏发生于天元历 1024 年，持续至今。<br>
+              复苏初期灵气浓度每十年翻倍，修行者数量随之增长。<br>
+              复苏源头指向北境灵脉，具体成因<span class="cursor">尚未确认…</span>
+            </div>
+            <div style="height:16px"></div>
+            <div class="ref-line">引用：<span class="link">人物 · 林晚（2）</span> · <span class="link">人物 · 张小凡（1）</span></div>
+            <div class="ref-line">引用：<span class="link">大纲 · 第 3 章</span> · <span class="link">正文 · 第 37 章</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P05 人物 -->
+      <section class="page" id="page-characters">
+        <div class="page-head">
+          <h1>人物</h1>
+          <div class="spacer"></div>
+          <div class="search-box"><input placeholder="搜索人物…"></div>
+          <button class="btn primary">＋ 新建人物</button>
+        </div>
+        <div class="char-layout">
+          <div class="char-list">
+            <div class="char-card">
+              <div class="avatar">林</div>
+              <div><div class="name">林晚</div><div class="role">女主 · 天元学宫弟子</div></div>
+            </div>
+            <div class="char-card">
+              <div class="avatar" style="background:linear-gradient(135deg,#4a2c67,#c85bbf)">张</div>
+              <div><div class="name">张小凡</div><div class="role">男主 · 灵脉村少年</div></div>
+            </div>
+            <div class="char-card">
+              <div class="avatar" style="background:linear-gradient(135deg,#2c5e4c,#3fc98e)">苏</div>
+              <div><div class="name">苏月</div><div class="role">配角 · 北境药师</div></div>
+            </div>
+          </div>
+          <div class="char-detail">
+            <div class="editor-head">
+              <input class="title" value="林晚">
+              <span class="tag confirmed">已确认</span>
+            </div>
+            <div class="field"><label>身份</label><div class="value">天元学宫内门弟子，剑修</div></div>
+            <div class="field"><label>性格</label><div class="value">外冷内热，执着，护短</div></div>
+            <div class="field"><label>外貌</label><div class="value">墨色长发，左腕有一道浅色灵纹</div></div>
+            <div class="field"><label>背景</label><div class="value">北境灵脉村出身，与张小凡同乡</div></div>
+            <div class="field"><label>目标</label><div class="value">查明灵脉枯竭真相</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P06 大纲 -->
+      <section class="page" id="page-outline">
+        <div class="page-head">
+          <h1>大纲</h1>
+          <div class="spacer"></div>
+          <button class="btn secondary">＋ 新建卷</button>
+        </div>
+        <div class="outline-layout">
+          <div class="outline-tree">
+            <div class="tree-item active"><span class="caret">▾</span><span class="tag volume">卷</span><span>第一卷 · 灵起</span></div>
+            <div class="tree-item indent-1"><span class="caret">▸</span><span class="tag chapter">章</span><span>第 1 章 · 觉醒</span><span class="badge done">done</span></div>
+            <div class="tree-item indent-1"><span class="caret">▸</span><span class="tag chapter">章</span><span>第 2 章 · 入城</span><span class="badge done">done</span></div>
+            <div class="tree-item indent-1"><span class="caret">▾</span><span class="tag chapter">章</span><span>第 3 章 · 初入天元</span><span class="badge active">active</span></div>
+            <div class="tree-item indent-2"><span class="caret"></span><span class="tag beat">细</span><span>学宫报到</span></div>
+            <div class="tree-item indent-2"><span class="caret"></span><span class="tag beat">细</span><span>遇见林晚</span></div>
+            <div class="tree-item indent-1"><span class="caret">▸</span><span class="tag chapter">章</span><span>第 4 章 · 灵脉异动</span></div>
+            <div class="tree-item"><span class="caret">▸</span><span class="tag volume">卷</span><span>第二卷 · 山海令</span></div>
+            <div style="height:12px"></div>
+            <button class="btn ghost" style="width:100%;text-align:left">＋ 新建章纲</button>
+          </div>
+          <div class="outline-editor">
+            <input class="title-input" value="第 3 章 · 初入天元">
+            <div class="field"><label>目标</label><div class="textarea-field">主角完成学宫报到，首次接触修行体系，与林晚重逢。</div></div>
+            <div class="field"><label>必须覆盖</label><div class="textarea-field">- 学宫报到流程<br>- 灵气复苏背景交代<br>- 林晚与主角重逢</div></div>
+            <div class="field"><label>禁区</label><div class="textarea-field">- 不揭示灵脉枯竭真相<br>- 不让主角获得金手指</div></div>
+            <div style="display:flex;gap:10px;align-items:center;color:var(--text-2);font-size:13px">
+              状态 <span class="badge active">写作中</span> · 目标字数 <span class="mono">2,500</span>
+              <div class="spacer"></div>
+              <button class="btn primary" data-go="editor">从章纲创建正文 →</button>
+            </div>
+          </div>
+          <div class="editor-side">
+            <h4>引用设定</h4>
+            <div class="ref-line"><span class="link">灵气复苏</span></div>
+            <div class="ref-line"><span class="link">天元学宫</span></div>
+            <div style="height:16px"></div>
+            <h4>出场人物</h4>
+            <div class="ref-line"><span class="link">张小凡</span> · 主角</div>
+            <div class="ref-line"><span class="link">林晚</span> · 女主</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P07 正文编辑器 -->
+      <section class="page" id="page-editor">
+        <div class="editor-layout">
+          <div class="chapter-tree">
+            <div class="tree-item"><span class="caret">▾</span><span class="tag volume">卷</span><span>第一卷 · 灵起</span></div>
+            <div class="tree-item indent-1"><span class="caret"></span><span class="tag chapter">章</span><span>第 1 章 · 觉醒</span><span style="margin-left:auto;color:var(--success)">✓</span></div>
+            <div class="tree-item indent-1"><span class="caret"></span><span class="tag chapter">章</span><span>第 2 章 · 入城</span><span style="margin-left:auto;color:var(--success)">✓</span></div>
+            <div class="tree-item indent-1 active"><span class="caret"></span><span class="tag chapter">章</span><span>第 3 章 · 初入天元</span><span style="margin-left:auto;color:var(--warning)">●</span></div>
+            <div style="height:12px"></div>
+            <button class="btn ghost" style="width:100%;text-align:left">＋ 新建章节</button>
+          </div>
+          <div class="write-area">
+            <div class="write-toolbar">
+              <span>⌕</span> <span>B</span> <span>I</span> <span>U</span> <span>#</span>
+              <div class="spacer"></div>
+              <button class="btn ghost" id="previewBtn">预览</button>
+              <button class="btn ghost">快照</button>
+              <button class="btn ghost" id="contextToggle">上下文 ▸</button>
+            </div>
+            <div class="write-content">
+              <div class="chapter-title">第 3 章 · 初入天元</div>
+              <div class="prose">
+                <p>晨雾还未散尽，天元学宫的牌楼已经遥遥在望。</p>
+                <p>张小凡攥紧手里的报到文书，指节微微发白。文书背面压着灵脉村的印章，边缘被汗水洇开了一小片。他抬起头，看见牌楼下立着一个人——墨色长发，左腕一道浅色灵纹，正是林晚。</p>
+                <p>"你迟到了。"林晚说。</p>
+                <p>牌楼两侧的石柱上，灵纹缓慢流转。灵气复苏之后的第三年，连学宫的门柱都刻满了阵法。张小凡张了张嘴，还没来得及回答，远处忽然传来一声钟响。</p>
+                <p>钟声在群山之间回荡了整整九下。</p>
+              </div>
+            </div>
+          </div>
+          <aside class="context-panel" id="contextPanel">
+            <div class="ctx-section">
+              <h4>章纲合同</h4>
+              <div class="contract-box"><b>目标</b>：主角完成学宫报到，首次接触修行体系，与林晚重逢。</div>
+              <div class="contract-box"><b>必须覆盖</b>：报到流程 / 灵气复苏背景 / 林晚重逢</div>
+              <div class="contract-box"><b>禁区</b>：不揭示灵脉枯竭真相</div>
+            </div>
+            <div class="ctx-section">
+              <h4>相关人物</h4>
+              <div class="ref-line"><span class="link">张小凡</span> · 主角</div>
+              <div class="ref-line"><span class="link">林晚</span> · 女主</div>
+            </div>
+            <div class="ctx-section">
+              <h4>相关设定</h4>
+              <div class="ref-line"><span class="link">灵气复苏</span> · 已确认</div>
+              <div class="ref-line"><span class="link">天元学宫</span> · 已确认</div>
+            </div>
+            <div class="ctx-section">
+              <h4>AI 辅助（v0.2）</h4>
+              <div class="ai-card">选中文字后可「讨论」或「续写」，AI 建议需确认后应用。</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- P08 素材（占位） -->
+      <section class="page" id="page-assets">
+        <div class="page-head">
+          <h1>素材</h1>
+          <div class="spacer"></div>
+          <div class="search-box"><input placeholder="搜索素材…"></div>
+          <button class="btn primary">＋ 上传素材</button>
+        </div>
+        <div class="page-pad" style="color:var(--text-2)">
+          素材库线框：列表/卡片切换 · 类型（文本/文件）· 来源 · 标签 · 备注。
+        </div>
+      </section>
+
+      <!-- P09 导出 -->
+      <section class="page" id="page-export">
+        <div class="page-head"><h1>导出中心</h1></div>
+        <div class="export-wrap">
+          <div class="radio-row">
+            <button class="radio-pill active">单章</button>
+            <button class="radio-pill">全书</button>
+          </div>
+          <div class="opt-row"><span class="lbl">章节范围</span><span class="val">第 37 章 · 山海令（2,148 字）</span></div>
+          <div class="opt-row"><span class="lbl">包含卷名 / 章名</span><span class="val">是</span></div>
+          <div class="opt-row"><span class="lbl">编码</span><span class="val">UTF-8 (BOM)</span></div>
+          <div class="opt-row"><span class="lbl">目标路径</span><span class="val">D:\Novels\大梦山海\第37章.md</span></div>
+          <div class="export-summary">预计：<span class="num">1 章</span> · <span class="num">2,148 字</span> · <span class="num">6.4 KB</span> · 同名文件将被覆盖（需确认）</div>
+          <div class="export-actions">
+            <button class="btn secondary">取消</button>
+            <button class="btn primary" onclick="this.textContent='导出成功 ✓';this.classList.remove('primary')">开始导出</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- P02 新建（占位） -->
+      <section class="page" id="page-new">
+        <div class="page-head"><h1>新建作品</h1></div>
+        <div class="page-pad" style="max-width:520px">
+          <div class="field"><label>书名 *</label><div class="value">大梦山海</div></div>
+          <div class="field"><label>题材</label><div class="value">玄幻</div></div>
+          <div class="field"><label>简介</label><div class="textarea-field" style="min-height:80px">灵脉枯竭的世界里，一个少年从灵脉村出发……</div></div>
+          <div class="field"><label>预计字数</label><div class="value">300,000</div></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+            <button class="btn secondary">取消</button>
+            <button class="btn primary">创建作品 →</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="statusbar">
+    <span id="statusWords">字数 2,148</span>
+    <span id="statusBook">全书 21,304</span>
+    <span class="spacer"></span>
+    <span><kbd>Ctrl S</kbd> 保存</span>
+    <span><kbd>Ctrl K</kbd> 命令</span>
+    <span><kbd>Ctrl P</kbd> 预览</span>
+  </footer>
+</div>
+
+<script>
+const pages = ["home","overview","settings","characters","outline","editor","assets","export","new"];
+const navMap = { overview:"overview", settings:"settings", characters:"characters", outline:"outline", editor:"editor", assets:"assets", export:"export" };
+
+function show(page) {
+  if (!pages.includes(page)) page = "home";
+  pages.forEach(p => document.getElementById("page-" + p).classList.toggle("active", p === page));
+  const nav = document.getElementById("sidebar");
+  nav.classList.toggle("collapsed", page === "home");
+  document.querySelectorAll(".nav-item").forEach(b => {
+    const target = navMap[b.dataset.go] || "";
+    b.classList.toggle("active", target === page);
+  });
+  if (page !== "editor") document.getElementById("contextPanel").classList.remove("hidden");
+  location.hash = page;
+}
+
+document.addEventListener("click", e => {
+  const go = e.target.closest("[data-go]");
+  if (go) show(go.dataset.go);
+});
+window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+document.getElementById("contextToggle").addEventListener("click", () => {
+  document.getElementById("contextPanel").classList.toggle("hidden");
+});
+
+let saving = false;
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    const state = document.getElementById("saveState");
+    const text = document.getElementById("saveText");
+    state.querySelector(".dot").className = "dot saving";
+    text.textContent = "保存中…";
+    setTimeout(() => {
+      state.querySelector(".dot").className = "dot saved";
+      text.textContent = "已保存";
+    }, 700);
+  }
+});
+
+show(location.hash.slice(1) || "home");
+</script>
+</body>
+</html>

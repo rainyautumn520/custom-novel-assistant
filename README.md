@@ -70,7 +70,7 @@ AI Novel IDE
 | 阶段 1（已完成） | Codex 设计 PRD + 审核功能和页面结构 | PRD + 页面结构审核 |
 | 阶段 2（已完成） | Codex 确定技术架构 + 检查扩展性 | 架构设计 + 技术决策记录 |
 | 阶段 3（已完成） | 设计数据结构（小说/人物/世界观/章节/素材/关系） | 数据模型 |
-| 阶段 4 | 确定 UI 风格（Obsidian / Codex / Notion 融合） | UI 设计稿 |
+| 阶段 4（已完成） | 确定 UI 风格（Obsidian / Codex / Notion 融合） | UI 设计稿 + 可点击原型 |
 | 阶段 5 | 分配开发任务 + 测试功能 + 记录 Bug | 迭代交付 |
 | 阶段 6 | 准备 RAG 测试数据 + 验证 AI 理解能力 | RAG 测试报告 |
 | 阶段 7 | 定义知识图谱关系 | 图谱设计 |
@@ -89,6 +89,8 @@ AI Novel IDE
 | [架构概览](docs/architecture.md) | 五层架构、子系统职责、数据流 |
 | [技术决策记录（ADR）](docs/architecture-decisions.md) | 进程拓扑、数据隔离、正文存储、密钥、Seedream 等裁决 |
 | [数据模型设计](docs/data-model.md) | 表结构、关系、状态机、迁移与删除规则 |
+| [UI 设计稿](docs/ui-design.md) | 设计令牌、五区布局、组件规范、页面线框与交互规则 |
+| [UI 可点击原型](prototype/index.html) | 七个核心页面的 HTML 原型，双击本地打开即可浏览 |
 | [项目目录结构](docs/project-structure.md) | monorepo 推荐布局 |
 | [开发环境搭建](docs/dev-setup.md) | 环境要求、启动步骤、推荐插件 |
 
@@ -127,4 +129,4 @@ MIT
 
 ---
 
-> 版本：v0.3 | 阶段三完成日期：2026-08-11
+> 版本：v0.4 | 阶段四完成日期：2026-08-11

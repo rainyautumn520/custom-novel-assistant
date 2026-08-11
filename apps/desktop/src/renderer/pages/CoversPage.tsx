@@ -51,7 +51,7 @@ export default function CoversPage({ projectId }: { projectId: string }) {
             className="textarea-field"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="例如：云海之上的仙山，青金色灵气环绕，史诗感，无文字"
+            placeholder="例如：主角立于断崖，身后云海翻涌，青金色灵气缠绕剑锋，暴雨将至的压迫感"
           />
         </div>
         <div className="field-row">
@@ -109,6 +109,8 @@ function CoverResult({
 }) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
+  const [fontStyle, setFontStyle] = useState('auto');
+  const [layout, setLayout] = useState('auto');
   const [busy, setBusy] = useState(false);
   const src = task.composedPath
     ? api.coverComposedUrl(projectId, task.id)
@@ -118,7 +120,7 @@ function CoverResult({
     if (!title.trim() && !author.trim()) return;
     setBusy(true);
     try {
-      await api.composeCover(projectId, task.id, title.trim(), author.trim());
+      await api.composeCover(projectId, task.id, title.trim(), author.trim(), fontStyle, layout);
       await onChanged();
     } finally {
       setBusy(false);
@@ -131,6 +133,26 @@ function CoverResult({
       <div className="compose-row">
         <input placeholder="书名" value={title} onChange={(e) => setTitle(e.target.value)} />
         <input placeholder="作者名" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        <select
+          className="export-select"
+          value={fontStyle}
+          onChange={(e) => setFontStyle(e.target.value)}
+        >
+          <option value="auto">字体：自动</option>
+          <option value="calligraphy">字体：书法</option>
+          <option value="serif">字体：宋体</option>
+          <option value="sans">字体：黑体</option>
+          <option value="round">字体：幼圆</option>
+        </select>
+        <select
+          className="export-select"
+          value={layout}
+          onChange={(e) => setLayout(e.target.value)}
+        >
+          <option value="auto">排版：自动</option>
+          <option value="horizontal">排版：横排</option>
+          <option value="vertical">排版：竖排</option>
+        </select>
         <button className="btn primary" disabled={busy} onClick={() => void compose()}>
           {busy ? '合成中…' : '叠加文字'}
         </button>

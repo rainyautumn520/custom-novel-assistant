@@ -24,6 +24,8 @@ class ComposeRequest(BaseModel):
 
     title: str = ""
     author: str = ""
+    font_style: str = "auto"
+    layout: str = "auto"
 
 
 @router.get("", response_model=list[CoverTaskOut])
@@ -60,7 +62,14 @@ def compose(
     session: Session = Depends(get_app_session),
 ):
     project_service.get_project_or_404(session, project_id)
-    return cover_service.compose_cover(project_id, task_id, payload.title, payload.author)
+    return cover_service.compose_cover(
+        project_id,
+        task_id,
+        payload.title,
+        payload.author,
+        font_style=payload.font_style,
+        layout=payload.layout,
+    )
 
 
 @router.get("/{task_id}/composed")

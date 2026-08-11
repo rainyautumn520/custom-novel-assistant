@@ -51,7 +51,7 @@ def test_cover_task_real_call_success(client, monkeypatch):
 
     composed = client.post(
         f"{base}/{created['id']}/compose",
-        json={"title": "大梦山海", "author": "灵风"},
+        json={"title": "大梦山海", "author": "灵风", "fontStyle": "calligraphy"},
     )
     assert composed.status_code == 200
     assert composed.json()["composedPath"].endswith("_composed.png")

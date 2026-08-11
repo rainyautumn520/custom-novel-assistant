@@ -280,10 +280,17 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ prompt, params }),
     }),
-  composeCover: (pid: string, taskId: string, title: string, author: string) =>
+  composeCover: (
+    pid: string,
+    taskId: string,
+    title: string,
+    author: string,
+    fontStyle: string = 'auto',
+    layout: string = 'auto',
+  ) =>
     request<CoverTask>(`/api/projects/${pid}/covers/${taskId}/compose`, {
       method: 'POST',
-      body: JSON.stringify({ title, author }),
+      body: JSON.stringify({ title, author, fontStyle, layout }),
     }),
   coverComposedUrl: (pid: string, taskId: string) =>
     `${API_BASE}/api/projects/${pid}/covers/${taskId}/composed`,

@@ -176,6 +176,18 @@ await page.locator('.write-textarea').fill(
 await page.waitForSelector('text=已保存', { timeout: 10000 });
 await page.screenshot({ path: path.join(OUT, 'preview-app-editor.png') });
 
+await page.getByRole('button', { name: '生成任务书' }).click();
+await page.waitForSelector('.brief-item', { timeout: 15000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-editor-brief.png') });
+
+await page.getByRole('button', { name: '五维审查' }).click();
+await page.waitForSelector('.review-dim', { timeout: 15000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-editor-review.png') });
+
+await page.getByRole('button', { name: '续写', exact: true }).click();
+await page.waitForSelector('.page-error', { timeout: 10000 });
+await page.screenshot({ path: path.join(OUT, 'preview-app-editor-assist-503.png') });
+
 await page.getByRole('button', { name: '人物', exact: true }).click();
 await page.waitForSelector('text=林晚');
 await page.locator('.char-card', { hasText: '林晚' }).click();

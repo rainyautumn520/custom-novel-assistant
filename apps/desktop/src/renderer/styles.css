@@ -253,6 +253,35 @@ input { font: inherit; color: inherit; }
   background: var(--panel-2); border: 1px solid var(--border);
   border-radius: 6px; padding: 4px 10px;
 }
+
+/* ---------- 写章流水线 ---------- */
+.ai-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.ai-actions .btn.ghost { border: 1px solid var(--border); }
+.ai-actions .btn.ghost:hover { border-color: var(--accent); }
+.brief-box { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.brief-item {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; font-size: 12.5px; color: var(--text-2); line-height: 1.6;
+}
+.brief-item b { display: block; color: var(--text); font-weight: 500; margin-bottom: 3px; }
+.brief-item span { white-space: pre-wrap; }
+.ai-card p {
+  margin: 6px 0 8px; white-space: pre-wrap; font-size: 12.5px; line-height: 1.7;
+  max-height: 220px; overflow: auto;
+}
+.review-box { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.review-dim {
+  border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+  font-size: 12.5px; background: var(--panel-2);
+}
+.review-pass { border-left: 3px solid var(--success); }
+.review-warn { border-left: 3px solid var(--warning); }
+.review-fail { border-left: 3px solid var(--danger); }
+.review-name { color: var(--text); font-weight: 500; }
+.review-status { float: right; color: var(--text-3); font-size: 11px; }
+.review-issue {
+  margin-top: 4px; color: var(--text-2); font-size: 12px; line-height: 1.5;
+}
 .search-box {
   width: 220px; background: var(--panel-2); border: 1px solid var(--border);
   border-radius: 6px; padding: 6px 10px;

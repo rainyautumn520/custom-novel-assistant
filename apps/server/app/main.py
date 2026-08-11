@@ -18,6 +18,7 @@ from app.api import (
     rag,
     search,
     settings,
+    writing,
 )
 from app.config import settings as app_settings
 from app.core.database import ensure_app_db
@@ -59,6 +60,7 @@ app.include_router(covers.router)
 app.include_router(graph.router)
 app.include_router(search.router)
 app.include_router(rag.router)
+app.include_router(writing.router)
 
 
 @app.get("/api/health", tags=["meta"])

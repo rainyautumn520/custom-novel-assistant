@@ -29,6 +29,25 @@ export default function EditorPage({
   const [fileIntegrity, setFileIntegrity] = useState('ok');
   const [error, setError] = useState('');
   const timerRef = useRef<number | null>(null);
+  const selRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
+  const [brief, setBrief] = useState<{
+    mode: string;
+    sections: Record<string, string>;
+    polished: string;
+  } | null>(null);
+  const [review, setReview] = useState<{
+    mode: string;
+    summary: string;
+    dims: { name: string; status: string; issues: string[] }[];
+  } | null>(null);
+  const [suggestion, setSuggestion] = useState<{
+    mode: string;
+    text: string;
+    start: number;
+    end: number;
+  } | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [undoStack, setUndoStack] = useState<{ content: string }[]>([]);
   const contentRef = useRef(content);
   const titleRef = useRef(title);
   const selectedIdRef = useRef(selectedId);
@@ -161,6 +180,77 @@ export default function EditorPage({
     [outline, chapters, selectedId],
   );
 
+  const runBrief = async () => {
+    if (!linkedNode || linkedNode.level !== 'chapter') {
+      setError('请先通过大纲页「从章纲创建正文」关联章纲');
+      return;
+    }
+    setAiBusy(true);
+    setError('');
+    try {
+      setBrief(await api.writingBrief(projectId, linkedNode.id));
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const runAssist = async (mode: 'continue' | 'rewrite') => {
+    if (!selectedId) return;
+    const { start, end } = selRef.current;
+    const selection = content.slice(start, end);
+    if (mode === 'rewrite' && !selection) {
+      setError('请先选中要改写的文字');
+      return;
+    }
+    setAiBusy(true);
+    setError('');
+    try {
+      const r = await api.assistChapter(projectId, selectedId, mode, selection, '');
+      setSuggestion({ mode, text: r.suggestion, start, end });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const applySuggestion = () => {
+    if (!suggestion) return;
+    setUndoStack((prev) => [...prev, { content }].slice(-10));
+    const next =
+      suggestion.mode === 'rewrite'
+        ? content.slice(0, suggestion.start) + suggestion.text + content.slice(suggestion.end)
+        : content.trimEnd() + '\n\n' + suggestion.text;
+    setContent(next);
+    setSuggestion(null);
+    scheduleSave();
+  };
+
+  const undoLast = () => {
+    setUndoStack((prev) => {
+      if (!prev.length) return prev;
+      const last = prev[prev.length - 1];
+      setContent(last.content);
+      scheduleSave();
+      return prev.slice(0, -1);
+    });
+  };
+
+  const runReview = async () => {
+    if (!selectedId) return;
+    setAiBusy(true);
+    setError('');
+    try {
+      setReview(await api.reviewChapter(projectId, selectedId));
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   const createChapter = async () => {
     const created = await api.createChapter(projectId, `第 ${chapters.length + 1} 章`);
     setChapters((prev) => [...prev, created]);
@@ -220,6 +310,10 @@ export default function EditorPage({
           <textarea
             className="write-textarea"
             value={content}
+            onSelect={(e) => {
+              const el = e.currentTarget;
+              selRef.current = { start: el.selectionStart, end: el.selectionEnd };
+            }}
             onChange={(e) => {
               setContent(e.target.value);
               scheduleSave();
@@ -260,6 +354,69 @@ export default function EditorPage({
               </>
             ) : (
               <div className="contract-box">本章未关联章纲，可在大纲页创建章纲后关联。</div>
+            )}
+          </div>
+          <div className="ctx-section">
+            <h4>写章流水线</h4>
+            <div className="ai-actions">
+              <button className="btn ghost" disabled={aiBusy} onClick={() => void runBrief()}>
+                生成任务书
+              </button>
+              <button className="btn ghost" disabled={aiBusy} onClick={() => void runAssist('continue')}>
+                续写
+              </button>
+              <button className="btn ghost" disabled={aiBusy} onClick={() => void runAssist('rewrite')}>
+                改写选中
+              </button>
+              {undoStack.length > 0 && (
+                <button className="btn ghost" onClick={undoLast}>
+                  撤销
+                </button>
+              )}
+              <button className="btn ghost" disabled={aiBusy} onClick={() => void runReview()}>
+                五维审查
+              </button>
+            </div>
+            {brief && (
+              <div className="brief-box">
+                {brief.mode === 'ai' && brief.polished && (
+                  <div className="contract-box">{brief.polished}</div>
+                )}
+                {Object.entries(brief.sections).map(([title, text]) => (
+                  <div key={title} className="brief-item">
+                    <b>{title}</b>
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {suggestion && (
+              <div className="ai-card">
+                <b>AI 建议（{suggestion.mode === 'rewrite' ? '改写' : '续写'}）</b>
+                <p>{suggestion.text}</p>
+                <button className="btn primary" onClick={applySuggestion}>
+                  应用建议
+                </button>
+                <button className="btn ghost" onClick={() => setSuggestion(null)}>
+                  放弃
+                </button>
+              </div>
+            )}
+            {review && (
+              <div className="review-box">
+                {review.summary && <div className="contract-box">{review.summary}</div>}
+                {review.dims.map((d) => (
+                  <div key={d.name} className={`review-dim review-${d.status}`}>
+                    <span className="review-name">{d.name}</span>
+                    <span className="review-status">
+                      {d.status === 'pass' ? '通过' : d.status === 'warn' ? '提醒' : '失败'}
+                    </span>
+                    {d.issues.map((issue, i) => (
+                      <div key={i} className="review-issue">{issue}</div>
+                    ))}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           <div className="ctx-section">

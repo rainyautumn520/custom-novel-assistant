@@ -261,4 +261,27 @@ export const api = {
     request<{ indexed: number; seconds: number }>(`/api/projects/${pid}/rag/index`, {
       method: 'POST',
     }),
+
+  writingBrief: (pid: string, nodeId: string) =>
+    request<{ mode: string; sections: Record<string, string>; polished: string }>(
+      `/api/projects/${pid}/brief/${nodeId}`,
+      { method: 'POST' },
+    ),
+  assistChapter: (
+    pid: string,
+    chapterId: string,
+    mode: 'continue' | 'rewrite',
+    selection: string,
+    instructions: string,
+  ) =>
+    request<{ mode: string; suggestion: string }>(
+      `/api/projects/${pid}/chapters/${chapterId}/assist`,
+      { method: 'POST', body: JSON.stringify({ mode, selection, instructions }) },
+    ),
+  reviewChapter: (pid: string, chapterId: string) =>
+    request<{
+      mode: string;
+      summary: string;
+      dims: { name: string; status: string; issues: string[] }[];
+    }>(`/api/projects/${pid}/chapters/${chapterId}/review`, { method: 'POST' }),
 };

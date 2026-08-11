@@ -1,206 +1,241 @@
-# 开发环境搭建指南
+# 开发环境搭建与部署指南
 
 > AI Novel IDE — 面向网文作者的 AI 创作操作系统
 >
-> 版本：v0.1-draft | 日期：2025-07-13
+> 版本：v0.6 | 更新：2026-08-11
+
+本文覆盖：环境要求、依赖安装、启动方式、数据库迁移、AI 能力配置（DeepSeek /
+Seedream / Ollama）、测试与 E2E、常见问题。
 
 ---
 
 ## 1. 环境要求
 
 | 工具 | 最低版本 | 用途 |
-|------|----------|------|
-| Node.js | >= 20 LTS | 前端构建、Electron 打包 |
-| Python | >= 3.12 | 后端服务、AI 模块 |
+|---|---|---|
+| Node.js | >= 20 LTS | 前端构建、Electron |
+| Python | >= 3.12 | 后端、RAG、AI |
 | Git | >= 2.40 | 版本控制 |
-| npm | >= 10 | 前端包管理 |
-| pip | >= 24 | Python 包管理 |
+| npm | >= 10 | 前端依赖 |
+| Ollama（可选） | >= 0.30 | 本地 bge-m3 嵌入后端 |
 
-### 可选工具
-
-| 工具 | 用途 |
-|------|------|
-| Ollama | 本地 AI 模型运行（离线降级/开发测试） |
-| Codex CLI / Codex 桌面版 | 唯一开发入口 |
+磁盘建议预留 >= 3 GB（Python 依赖约 1.5 GB，嵌入模型约 0.1–1.2 GB）。
 
 ---
 
-## 2. 推荐 IDE 与插件
-
-### Codex
-
-推荐的扩展列表（放入 .vscode/extensions.json）：
-
-- ms-python.python
-- ms-python.vscode-pylance
-- charliermarsh.ruff
-- dbaeumer.vscode-eslint
-- esbenp.prettier-vscode
-- bradlc.vscode-tailwindcss
-- ms-vscode.vscode-typescript-next
-
-### 推荐设置
-
-Python 文件使用 Ruff 格式化并开启保存时自动格式化；TypeScript/React 文件使用 Prettier 格式化并开启保存时自动格式化；.css 文件关联为 tailwindcss 语言模式。
-
----
-
-## 3. 克隆与初始化
+## 2. 安装
 
 ```bash
-# 克隆仓库
-git clone <repo-url>
-cd ai-novel-ide
+# 克隆
+git clone https://github.com/rainyautumn520/custom-novel-assistant
+cd custom-novel-assistant
 
-# 安装前端依赖
-cd apps/desktop
+# 前端（npm workspaces，含 Electron；国内网络慢时可先跳过二进制）
 npm install
+# 若 Electron 下载卡住：
+#   $env:ELECTRON_SKIP_BINARY_DOWNLOAD='1'; npm install
+#   cd apps/desktop; node node_modules\electron\install.js   # 之后再补
 
-# 安装后端依赖
-cd ../server
+# 后端
+cd apps/server
 python -m venv .venv
-
-# 激活虚拟环境
 # Windows:
-.venv/Scripts/activate
+.\.venv\Scripts\pip install -r requirements.txt
 # macOS/Linux:
-source .venv/bin/activate
-
-pip install -r requirements.txt
+source .venv/bin/pip install -r requirements.txt
 ```
+
+后端依赖说明（requirements.txt）：
+
+| 依赖 | 用途 |
+|---|---|
+| fastapi / uvicorn / pydantic | API 服务 |
+| sqlalchemy / alembic | ORM 与迁移 |
+| chromadb | 向量库 |
+| sentence-transformers + torch(CUDA 可选) | 默认中文嵌入（BGE-small-zh-v1.5） |
+| python-multipart | 素材文件上传 |
+| pytest / httpx | 测试 |
+
+> 如果不想装 torch，可改用 Ollama 嵌入后端（见 5.3），并把
+> `sentence-transformers` 从 requirements 中移除。
 
 ---
 
-## 4. 环境变量配置
+## 3. 启动
 
-在项目根目录创建 .env 文件（已加入 .gitignore）：
+### 一键启动（Windows）
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/dev.ps1
+```
+
+脚本会自动创建后端虚拟环境、安装依赖，然后同时启动：
+
+- 后端 API：http://localhost:8000（文档 /docs）
+- 前端 Dev Server：http://localhost:5173
+
+### 手动启动（两个终端）
 
 ```bash
-# .env — API Keys
+# 终端 1：后端
+cd apps/server
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
 
-# deepseek-v4-flash API (后端逻辑生成、RAG、Agent)
-DEEPSEEK_API_KEY=sk-your-key-here
-DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+# 终端 2：浏览器模式
+npm run dev:desktop
 
-
-# 本地 Ollama（可选，离线降级）
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=deepseek-v4-flash
+# 终端 2 备选：Electron 桌面窗口
+npm run electron:dev -w @ai-novel-ide/desktop
 ```
+
+> Electron 生产模式由主进程动态分配端口并启动后端，不依赖固定 8000（ADR-01）。
 
 ---
 
-## 5. 启动开发环境
+## 4. 数据库迁移
 
-### 终端 1 — 后端
+项目使用双迁移链（ADR-07）：
 
 ```bash
 cd apps/server
-source .venv/bin/activate  # Windows: .venv/Scripts/activate
-python -m uvicorn app.main:app --reload --port 8000
+
+# 1) 应用级库（最近作品、全局设置、凭证密文）
+.\.venv\Scripts\python -m alembic upgrade head
+
+# 2) 作品库（每个作品独立 novel.db）
+# Windows PowerShell：
+$env:NOVEL_DB_URL='sqlite:///C:/Users/<你>/ai-novel-ide-data/workspaces/<作品ID>/novel.db'
+.\.venv\Scripts\python -m alembic -c alembic_novel.ini upgrade head
+
+# macOS/Linux：
+# NOVEL_DB_URL="sqlite:///~/ai-novel-ide-data/workspaces/<作品ID>/novel.db" \
+#   .venv/bin/python -m alembic -c alembic_novel.ini upgrade head
 ```
 
-### 终端 2 — 前端
+说明：
 
-```bash
-cd apps/desktop
-npm run dev
-```
-
-启动后：
-
-- 前端 Dev Server: http://localhost:5173
-- 后端 API 文档: http://localhost:8000/docs
-- 后端 OpenAPI Schema: http://localhost:8000/openapi.json
+- 新建作品时服务端自动建表；老作品升级只需对每个作品库执行一次 `upgrade head`。
+- 打开作品时版本不匹配会阻止写入（打开时校验逻辑在接入中）。
+- 生成新迁移（改模型后）：
+  ```bash
+  .\.venv\Scripts\python -m alembic revision --autogenerate -m "描述"
+  $env:NOVEL_DB_URL='sqlite:///临时.db'
+  .\.venv\Scripts\python -m alembic -c alembic_novel.ini revision --autogenerate -m "描述"
+  ```
 
 ---
 
-## 6. 数据库初始化
+## 5. 环境变量与 AI 配置
+
+后端通过环境变量或 `apps/server/.env` 读取配置（模板见 [.env.example](../apps/server/.env.example)），
+前缀统一为 `AI_NOVEL_`。
+
+### 5.1 基础
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `AI_NOVEL_DATA_DIR` | `~/ai-novel-ide-data` | 用户创作数据根目录（app.db + workspaces/） |
+| `AI_NOVEL_CORS_ORIGINS` | `["http://localhost:5173","http://127.0.0.1:5173"]` | 开发用 CORS 白名单 |
+
+### 5.2 DeepSeek（AI 讨论 / 续写 / 改写 / AI 审查 / AI 任务书）
+
+```ini
+AI_NOVEL_DEEPSEEK_API_KEY=sk-xxxx
+AI_NOVEL_DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+AI_NOVEL_DEEPSEEK_MODEL=deepseek-chat
+```
+
+未配置时：任务书、五维审查自动使用**本地规则版**，续写/改写返回 503 提示，不影响其他功能。
+
+### 5.3 向量嵌入（RAG）
+
+默认后端：sentence-transformers + `BAAI/bge-small-zh-v1.5`（首次使用自动下载约 100 MB）。
+
+```ini
+AI_NOVEL_VECTOR_BACKEND=sentence-transformers
+AI_NOVEL_VECTOR_MODEL=BAAI/bge-small-zh-v1.5
+```
+
+切换 Ollama bge-m3（需要先 `ollama pull bge-m3`）：
+
+```ini
+AI_NOVEL_VECTOR_BACKEND=ollama
+AI_NOVEL_VECTOR_MODEL=bge-m3
+AI_NOVEL_OLLAMA_BASE_URL=http://localhost:11434
+```
+
+切换后到「AI 设定讨论」页点「重建知识索引」即可。
+
+### 5.4 封面生成（Seedream 5.0）
+
+```ini
+AI_NOVEL_SEEDREAM_API_KEY=xxxx
+AI_NOVEL_SEEDREAM_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+AI_NOVEL_SEEDREAM_MODEL=doubao-seedream-5-0
+```
+
+> 注意：模型标识以火山方舟官方文档为准（ADR-05 待联调确认）。未配置时封面任务会
+> 如实标记 failed 并提示凭证缺失，不会静默失败。
+
+---
+
+## 6. 测试与 E2E
+
+```bash
+# 后端单元/集成测试（31 个）
+cd apps/server
+.\.venv\Scripts\python -m pytest -q
+
+# 前端类型检查 + 构建
+cd ../..
+npm run build
+
+# 端到端（需先启动后端 8000 与前端 5173）
+node scripts/e2e-smoke.mjs
+```
+
+E2E 会播种一个测试项目，驱动本机 Edge：首页 → 设定 → 大纲（含拖拽）→ 正文（自动保存/
+任务书/审查/提交）→ 人物 → 导出 → 素材上传 → AI 讨论 → 封面工坊 → 图谱 → 节奏，
+并在 `prototype/` 输出截图。
+
+### RAG 性能验收数据
 
 ```bash
 cd apps/server
+.\.venv\Scripts\python scripts\seed_rag_data.py
+```
 
-# 初始化数据库（自动创建 SQLite 文件）
-python -c 'from app.core.database import init_db; init_db()'
+生成 3 卷 30 章（每章约 1 万字）+ 设定/人物/素材，并输出索引与检索耗时。
 
-# 运行迁移
-alembic upgrade head
+---
 
-# 填充测试数据（可选）
-python scripts/seed_data.py
+## 7. 常见问题
+
+| 问题 | 解决 |
+|---|---|
+| npm install 卡在 Electron | `ELECTRON_SKIP_BINARY_DOWNLOAD=1` 后补跑 `node node_modules/electron/install.js` |
+| git push 连不上 GitHub | 系统代理生效但 git 未用：`git -c http.proxy=http://127.0.0.1:7897 -c https.proxy=http://127.0.0.1:7897 push`（按本机代理端口调整） |
+| 首次 RAG 检索慢 | 是嵌入模型下载/加载；之后走本地缓存，无网络依赖 |
+| 向量检索空结果 | 到「AI 设定讨论」点「重建知识索引」 |
+| AI 讨论 503 | 未配置 `AI_NOVEL_DEEPSEEK_API_KEY` |
+| 封面任务失败 | 未配置 Seedream 凭证或模型标识待确认 |
+| 老作品缺新表 | 对该作品库执行 `alembic -c alembic_novel.ini upgrade head` |
+| 端口 8000 被占用 | 改 `--port` 或结束占用进程 |
+
+---
+
+## 8. 目录速览
+
+```text
+apps/desktop        Electron + Vite + React（渲染进程、主进程、preload）
+apps/server         FastAPI 后端（api/services/models/schemas/core + alembic）
+packages/shared-types  前后端共享 TS 类型（与 data-model.md 一一对应）
+scripts/dev.ps1     一键启动；scripts/e2e-smoke.mjs E2E
+prototype/          可点击设计原型 + 真实应用截图
+docs/               需求、架构、数据模型、UI、RAG、图谱、Agent 文档
 ```
 
 ---
 
-## 7. 常用命令
-
-### 前端
-
-```bash
-npm run dev          # 启动开发服务器
-npm run build        # 生产构建
-npm run preview      # 预览生产构建
-npm run lint         # ESLint 检查
-npm run format       # Prettier 格式化
-npm run test         # Vitest 单元测试
-npm run test:e2e     # Playwright E2E 测试
-npm run electron:dev # Electron 开发模式
-npm run electron:build # Electron 打包
-```
-
-### 后端
-
-```bash
-pytest                          # 运行所有测试
-pytest -v -k test_character     # 运行指定测试
-ruff check .                    # 代码检查
-ruff format .                   # 代码格式化
-alembic revision --autogenerate # 生成迁移
-alembic upgrade head            # 执行迁移
-```
-
----
-
-## 8. 本地 AI 模型（可选）
-
-安装 Ollama 并拉取模型用于离线开发：
-
-```bash
-# 安装 Ollama
-# macOS: brew install ollama
-# Linux: curl -fsSL https://ollama.com/install.sh | sh
-# Windows: 从 https://ollama.com 下载安装包
-
-# 拉取模型
-# deepseek-v4-flash 为云端模型，无需本地拉取（如需离线降级，另行选择本地模型）
-ollama pull bge-m3            # 本地嵌入模型
-```
-
----
-
-## 9. 常见问题
-
-| 问题 | 解决方案 |
-|------|----------|
-| npm install 失败 | 清除缓存: npm cache clean --force，删除 node_modules 重试 |
-| Python 找不到模块 | 确认已激活虚拟环境 |
-| SQLite 写入权限 | 确认数据目录存在且有写入权限 |
-| Electron 启动白屏 | 检查 DevTools Console，通常为 Vite 端口冲突 |
-| Ollama 连接失败 | 确认 ollama serve 在运行，检查 OLLAMA_BASE_URL |
-| 端口 8000 被占用 | 使用 netstat 或 lsof 查找占用进程并结束 |
-
----
-
-## 10. 项目约定
-
-| 约定 | 说明 |
-|------|------|
-| 代码规范 | 前端 ESLint + Prettier，后端 Ruff |
-| Commit 规范 | Conventional Commits (feat:, fix:, docs:, refactor:) |
-| 分支策略 | main (稳定) -> develop (开发) -> feat/* (功能分支) |
-| 代码审查 | 每个 PR 需经过 Codex Agent 审查 |
-| 测试要求 | MVP 阶段：核心业务逻辑单元测试覆盖 >= 60% |
-
----
-
-> 相关文档：[README.md](../README.md) · [mvp-scope.md](mvp-scope.md) · [tech-stack.md](tech-stack.md) · [architecture.md](architecture.md) · [project-structure.md](project-structure.md)
+> 相关文档：[README.md](../README.md) · [architecture-decisions.md](architecture-decisions.md) ·
+> [data-model.md](data-model.md) · [rag-test-report.md](rag-test-report.md)

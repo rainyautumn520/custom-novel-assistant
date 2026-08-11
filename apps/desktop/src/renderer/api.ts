@@ -227,4 +227,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ query }),
     }),
+  ragStatus: (pid: string) =>
+    request<{ backend: string; model: string; count: number; ollamaAvailable: boolean }>(
+      `/api/projects/${pid}/rag/status`,
+    ),
+  rebuildIndex: (pid: string) =>
+    request<{ indexed: number; seconds: number }>(`/api/projects/${pid}/rag/index`, {
+      method: 'POST',
+    }),
 };

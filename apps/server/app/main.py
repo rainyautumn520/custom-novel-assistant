@@ -15,6 +15,7 @@ from app.api import (
     links,
     outlines,
     projects,
+    rag,
     search,
     settings,
 )
@@ -57,6 +58,7 @@ app.include_router(ai.router)
 app.include_router(covers.router)
 app.include_router(graph.router)
 app.include_router(search.router)
+app.include_router(rag.router)
 
 
 @app.get("/api/health", tags=["meta"])

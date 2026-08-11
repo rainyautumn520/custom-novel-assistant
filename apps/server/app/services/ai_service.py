@@ -47,7 +47,7 @@ def list_messages(project_id: str, session_id: str) -> list[AiMessage]:
         )
 
 
-def _build_context(project_id: str, session_id: str) -> tuple[str, list[dict]]:
+def _build_context(project_id: str, session_id: str, user_content: str) -> tuple[str, list[dict]]:
     with project_session(project_id) as session:
         confirmed = session.scalars(
             select(Setting).where(Setting.status == "confirmed").limit(30)
@@ -72,6 +72,19 @@ def _build_context(project_id: str, session_id: str) -> tuple[str, list[dict]]:
     else:
         system_prompt += "『已确认设定』（暂无）"
 
+    related = []
+    try:
+        from app.services import rag_service
+
+        related = rag_service.search_vector(project_id, user_content[-300:], top_k=8)
+    except Exception:
+        related = []
+    if related:
+        lines = "\n".join(
+            f"- [{item['type']}] {item['title']}：{item['snippet']}" for item in related
+        )
+        system_prompt += f"\n\n『相关检索』\n{lines}"
+
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend({"role": m.role, "content": m.content} for m in history)
     return system_prompt, messages
@@ -89,7 +102,7 @@ def chat(project_id: str, session_id: str, content: str) -> str:
         session.add(AiMessage(id=new_id(), session_id=session_id, role="user", content=content))
         session.commit()
 
-    _, messages = _build_context(project_id, session_id)
+    _, messages = _build_context(project_id, session_id, content)
     try:
         resp = httpx.post(
             f"{settings.deepseek_base_url.rstrip('/')}/chat/completions",

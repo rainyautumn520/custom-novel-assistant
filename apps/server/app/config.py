@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     seedream_api_key: str = ""
     seedream_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
     seedream_model: str = "doubao-seedream-5-0"
+    vector_backend: str = "sentence-transformers"  # sentence-transformers | ollama
+    vector_model: str = "BAAI/bge-small-zh-v1.5"  # 或 ollama 的 bge-m3
+    ollama_base_url: str = "http://localhost:11434"
 
     model_config = SettingsConfigDict(env_prefix="AI_NOVEL_")
 

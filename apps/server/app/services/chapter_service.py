@@ -96,6 +96,10 @@ def update_chapter(
             chapter.title = title.strip() or chapter.title
         session.commit()
         session.refresh(chapter)
+        if content_md is not None:
+            from app.services import rag_service
+
+            rag_service.index_chapter(project_id, chapter.id)
         return chapter, content_md if content_md is not None else current, "ok"
 
 

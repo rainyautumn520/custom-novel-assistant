@@ -6,3 +6,8 @@ pydantic-settings>=2.3,<3.0
 alembic>=1.13,<2.0
 httpx>=0.27,<1.0
 pytest>=8.0,<9.0
+chromadb>=0.5,<2.0
+# 向量嵌入二选一：
+# 1) sentence-transformers + torch（CPU）——本仓库默认
+# 2) ollama（本地 bge-m3，vector_backend=ollama）
+sentence-transformers>=3.0,<5.0

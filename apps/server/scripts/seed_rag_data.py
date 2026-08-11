@@ -23,6 +23,7 @@ from app.core.database import ensure_app_db  # noqa: E402
 from app.services import (  # noqa: E402
     asset_service,
     chapter_service,
+    rag_service,
     character_service,
     outline_service,
     project_service,
@@ -99,6 +100,14 @@ def main() -> None:
     chapters = chapter_service.list_chapters(pid)
     t_list = time.perf_counter() - t2
 
+    t3 = time.perf_counter()
+    index = rag_service.rebuild_index(pid)
+    t_index = time.perf_counter() - t3
+
+    t4 = time.perf_counter()
+    vector_hits = rag_service.search_vector(pid, "灵脉枯竭的真相", top_k=5)
+    t_vector = time.perf_counter() - t4
+
     print(
         {
             "projectId": pid,
@@ -108,6 +117,10 @@ def main() -> None:
             "searchSeconds": round(t_search, 4),
             "listChaptersSeconds": round(t_list, 4),
             "totalWords": sum(chapter.word_count for chapter in chapters),
+            "vectorIndexSeconds": round(t_index, 2),
+            "vectorIndexed": index["indexed"],
+            "vectorSearchSeconds": round(t_vector, 4),
+            "vectorTopHit": vector_hits[0] if vector_hits else None,
         }
     )
 

@@ -13,6 +13,7 @@ export default function AiPage({ projectId }: { projectId: string }) {
   const [error, setError] = useState('');
   const [adopt, setAdopt] = useState<string | null>(null);
   const [categories, setCategories] = useState<SettingCategory[]>([]);
+  const [rag, setRag] = useState<{ backend: string; count: number } | null>(null);
 
   const loadSessions = useCallback(async () => {
     const list = await api.listAiSessions(projectId);
@@ -25,8 +26,23 @@ export default function AiPage({ projectId }: { projectId: string }) {
   useEffect(() => {
     void api.getAiPrompt(projectId).then((r) => setPrompt(r.prompt)).catch(() => undefined);
     void api.listCategories(projectId).then(setCategories).catch(() => undefined);
+    void api.ragStatus(projectId).then(setRag).catch(() => undefined);
     void loadSessions().catch((e) => setError(String(e)));
   }, [projectId, loadSessions]);
+
+  const rebuildRag = async () => {
+    setBusy(true);
+    try {
+      const result = await api.rebuildIndex(projectId);
+      const status = await api.ragStatus(projectId);
+      setRag(status);
+      setError(`知识索引已重建：${result.indexed} 个片段（${result.seconds}s）`);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!sessionId) return;
@@ -83,6 +99,14 @@ export default function AiPage({ projectId }: { projectId: string }) {
       <div className="page-head">
         <h1>AI 设定讨论</h1>
         <div className="spacer" />
+        {rag && (
+          <span className="rag-status">
+            {rag.count > 0 ? `向量库 ${rag.count} 片段` : '向量库未建立'}
+          </span>
+        )}
+        <button className="btn secondary" onClick={() => void rebuildRag()} disabled={busy}>
+          重建知识索引
+        </button>
         <button className="btn primary" onClick={() => void newSession()}>＋ 新讨论</button>
       </div>
 

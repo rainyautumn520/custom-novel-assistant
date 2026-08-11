@@ -10,15 +10,18 @@ from app.core.database import new_id, project_db_path, project_session
 from app.models.ai import CoverTask
 
 COVER_PROMPT_TEMPLATE = (
-    "为小说封面生成一张竖版插画，必须遵守以下硬性要求：\n"
-    "1. 构图：主体场景居中偏下，顶部留出约 15% 高度作为书名区域，"
-    "底部留出约 10% 高度作为作者名区域，人物/主体不要顶到画面上边缘；\n"
+    "为小说封面生成一张 2:3 竖版高品质插画，必须遵守以下硬性要求：\n"
+    "1. 构图：主体场景居中偏下，顶部留出约 20% 高度作为书名区域，"
+    "底部留出约 12% 高度作为作者名区域，人物/主体不要顶到画面上边缘；\n"
     "2. 内容：必须呈现一个完整清晰的叙事场景（人物/风景/建筑均可），"
-    "有层次与纵深，避免抽象色块、纯装饰或不知所云的画面；\n"
+    "有明确的视觉焦点与层次纵深，禁止抽象色块、纯装饰或不知所云的画面；\n"
     "3. 画面中禁止出现任何文字、字母、数字、水印、logo 或签名；\n"
-    "4. 光影与质感：电影级光影、高对比、色彩饱和但不刺眼；\n"
+    "4. 美术水准：对标专业出版级小说封面——强主光源与明确视觉焦点，"
+    "丰富的材质细节，电影级景深与氛围，色彩高级协调、饱和但不刺眼；\n"
     "5. 风格：{style}；\n"
-    "6. 画面内容需求：{prompt}"
+    "6. 画面内容需求：{prompt}；\n"
+    "7. 禁忌：避免低幼卡通、廉价 3D 渲染、塑料质感、贴纸感、"
+    "过度留白、构图失衡、脸部崩坏或比例失调。"
 )
 
 FONT_CANDIDATES = [
@@ -100,7 +103,7 @@ def _run_generation(project_id: str, task: CoverTask, prompt: str, params: dict)
             json={
                 "model": settings.seedream_model,
                 "prompt": prompt,
-                "size": params.get("size", "1920x1920"),
+                "size": params.get("size", "1920x2880"),
                 "response_format": "b64_json",
             },
             timeout=180,
@@ -150,40 +153,76 @@ def compose_cover(
     if not source.exists():
         raise HTTPException(status_code=404, detail="原图文件已丢失")
 
-    image = Image.open(source).convert("RGB")
+    image = Image.open(source).convert("RGBA")
     width, height = image.size
+
+    # 顶部/底部渐变遮罩（替代生硬黑条）
+    overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    mask_draw = ImageDraw.Draw(overlay)
+    top_zone = int(height * 0.30)
+    for y in range(top_zone):
+        alpha = int(210 * (1 - y / top_zone))
+        mask_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+    bottom_zone = int(height * 0.18)
+    for y in range(bottom_zone):
+        alpha = int(210 * (y / bottom_zone))
+        mask_draw.line(
+            [(0, height - bottom_zone + y), (width, height - bottom_zone + y)],
+            fill=(0, 0, 0, alpha),
+        )
+    image = Image.alpha_composite(image, overlay)
     draw = ImageDraw.Draw(image)
 
-    title_size = max(48, int(width * 0.075))
-    author_size = max(32, int(width * 0.035))
-    title_font = _load_font(title_size)
-    author_font = _load_font(author_size)
-
-    def draw_text_centered(text: str, font, y_ratio: float, stroke_ratio: float = 0.015):
-        stroke = max(3, int(width * stroke_ratio))
-        bbox = draw.textbbox((0, 0), text, font=font, stroke_width=stroke)
-        text_w = bbox[2] - bbox[0]
-        x = (width - text_w) / 2
+    def draw_spaced_centered(
+        text: str,
+        font_size: int,
+        y_ratio: float,
+        spacing_ratio: float = 0.30,
+        stroke_ratio: float = 0.030,
+    ):
+        min_size = max(10, int(width * 0.008))
+        while True:
+            font = _load_font(font_size)
+            stroke = max(2, int(width * stroke_ratio))
+            spacing = int(font_size * spacing_ratio)
+            char_widths = [
+                draw.textbbox((0, 0), ch, font=font, stroke_width=stroke)[2] for ch in text
+            ]
+            total_w = sum(char_widths) + spacing * (len(text) - 1)
+            if total_w <= width * 0.92 or font_size <= min_size:
+                break
+            font_size = max(min_size, int(font_size * 0.85))
+        x = (width - total_w) / 2
         y = int(height * y_ratio)
-        # 深色底条提升可读性
-        bar_h = (bbox[3] - bbox[1]) + stroke * 2 + 24
-        draw.rectangle(
-            [0, y - 12, width, y + bar_h],
-            fill=(24, 24, 32),
-        )
-        draw.text(
-            (x, y),
-            text,
-            font=font,
-            fill=(255, 255, 255, 255),
-            stroke_width=stroke,
-            stroke_fill=(10, 10, 20, 255),
-        )
+        for ch, cw in zip(text, char_widths):
+            draw.text(
+                (x + stroke, y + stroke),
+                ch,
+                font=font,
+                fill=(0, 0, 0, 220),
+                stroke_width=stroke,
+                stroke_fill=(0, 0, 0, 220),
+            )
+            draw.text(
+                (x, y),
+                ch,
+                font=font,
+                fill=(255, 255, 255, 255),
+                stroke_width=stroke,
+                stroke_fill=(18, 18, 28, 255),
+            )
+            x += cw + spacing
 
     if title.strip():
-        draw_text_centered(title.strip(), title_font, 0.06)
+        draw_spaced_centered(title.strip(), max(48, int(width * 0.12)), 0.05)
     if author.strip():
-        draw_text_centered(author.strip(), author_font, 0.86)
+        draw_spaced_centered(
+            author.strip(),
+            max(40, int(width * 0.055)),
+            0.90,
+            spacing_ratio=0.50,
+            stroke_ratio=0.025,
+        )
 
     composed_path = f"covers/{task.id}_composed.png"
     (root / composed_path).parent.mkdir(parents=True, exist_ok=True)

@@ -3,7 +3,7 @@ import type { CoverTask } from '@ai-novel-ide/shared-types';
 
 import { API_BASE, api } from '../api';
 
-const SIZES = ['1920x1920', '2048x2048', '2880x1620'];
+const SIZES = ['1920x2880', '1600x2400'];
 
 export default function CoversPage({ projectId }: { projectId: string }) {
   const [tasks, setTasks] = useState<CoverTask[]>([]);

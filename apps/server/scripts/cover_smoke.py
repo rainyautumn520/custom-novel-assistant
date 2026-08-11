@@ -48,7 +48,7 @@ def main() -> int:
         f"/api/projects/{pid}/covers",
         {
             "prompt": "云海之上的仙山，青金色灵气环绕，史诗感，国风水墨，无文字",
-            "params": {"size": "1920x1920"},
+            "params": {"size": "1920x2880"},
         },
         timeout=240,
     )

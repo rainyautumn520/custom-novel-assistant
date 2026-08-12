@@ -296,6 +296,22 @@ export const api = {
     `${API_BASE}/api/projects/${pid}/covers/${taskId}/composed`,
 
   listAllLinks: (pid: string) => request<EntityLink[]>(`/api/projects/${pid}/links`),
+  createLink: (
+    pid: string,
+    data: {
+      sourceType: string;
+      sourceId: string;
+      targetType: string;
+      targetId: string;
+      relationType?: string;
+    },
+  ) =>
+    request<EntityLink>(`/api/projects/${pid}/links`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteLink: (pid: string, linkId: string) =>
+    request<void>(`/api/projects/${pid}/links/${linkId}`, { method: 'DELETE' }),
   ragStatus: (pid: string) =>
     request<{ backend: string; model: string; count: number; ollamaAvailable: boolean }>(
       `/api/projects/${pid}/rag/status`,

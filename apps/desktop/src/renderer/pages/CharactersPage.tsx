@@ -3,7 +3,13 @@ import type { Character, Setting } from '@ai-novel-ide/shared-types';
 
 import { api } from '../api';
 
-export default function CharactersPage({ projectId }: { projectId: string }) {
+export default function CharactersPage({
+  projectId,
+  focusCharacterId = null,
+}: {
+  projectId: string;
+  focusCharacterId?: string | null;
+}) {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [settings, setSettings] = useState<Setting[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -22,6 +28,10 @@ export default function CharactersPage({ projectId }: { projectId: string }) {
   useEffect(() => {
     void load().catch((e) => setError(String(e)));
   }, [load]);
+
+  useEffect(() => {
+    if (focusCharacterId) setSelectedId(focusCharacterId);
+  }, [focusCharacterId]);
 
   const selected = useMemo(
     () => characters.find((c) => c.id === selectedId) ?? null,

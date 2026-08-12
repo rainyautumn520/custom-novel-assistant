@@ -31,6 +31,9 @@ export default function App() {
   const [backend, setBackend] = useState<'checking' | 'ok' | 'fail'>('checking');
   const [activeNav, setActiveNav] = useState('概览');
   const [focusChapterId, setFocusChapterId] = useState<string | null>(null);
+  const [focusSettingId, setFocusSettingId] = useState<string | null>(null);
+  const [focusCharacterId, setFocusCharacterId] = useState<string | null>(null);
+  const [focusAssetId, setFocusAssetId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
@@ -47,6 +50,9 @@ export default function App() {
         setName('');
         setActiveNav('概览');
         setFocusChapterId(null);
+        setFocusSettingId(null);
+        setFocusCharacterId(null);
+        setFocusAssetId(null);
         setView('workspace');
         await api.listProjects().then(setProjects).catch(() => undefined);
       }
@@ -57,6 +63,25 @@ export default function App() {
     setSelected(null);
     setActiveNav('概览');
     setFocusChapterId(null);
+    setFocusSettingId(null);
+    setFocusCharacterId(null);
+    setFocusAssetId(null);
+  };
+
+  const graphNavigate = (type: string, id: string) => {
+    if (type === 'setting') {
+      setFocusSettingId(id);
+      setActiveNav('设定');
+    } else if (type === 'character') {
+      setFocusCharacterId(id);
+      setActiveNav('人物');
+    } else if (type === 'chapter') {
+      setFocusChapterId(id);
+      setActiveNav('正文');
+    } else if (type === 'asset') {
+      setFocusAssetId(id);
+      setActiveNav('素材');
+    }
   };
 
   return (
@@ -112,6 +137,9 @@ export default function App() {
                   setSelected(p);
                   setActiveNav('概览');
                   setFocusChapterId(null);
+                  setFocusSettingId(null);
+                  setFocusCharacterId(null);
+                  setFocusAssetId(null);
                   setView('workspace');
                 }}
               />
@@ -120,10 +148,14 @@ export default function App() {
                 project={selected}
                 nav={activeNav}
                 focusChapterId={focusChapterId}
+                focusSettingId={focusSettingId}
+                focusCharacterId={focusCharacterId}
+                focusAssetId={focusAssetId}
                 onOpenChapter={(id) => {
                   setFocusChapterId(id);
                   setActiveNav('正文');
                 }}
+                onGraphNavigate={graphNavigate}
               />
             )}
           </div>
@@ -242,26 +274,36 @@ function Workspace({
   project,
   nav,
   focusChapterId,
+  focusSettingId,
+  focusCharacterId,
+  focusAssetId,
   onOpenChapter,
+  onGraphNavigate,
 }: {
   project: Project | null;
   nav: string;
   focusChapterId: string | null;
+  focusSettingId: string | null;
+  focusCharacterId: string | null;
+  focusAssetId: string | null;
   onOpenChapter: (chapterId: string) => void;
+  onGraphNavigate: (type: string, id: string) => void;
 }) {
   if (!project) return <div className="page-pad muted">未选择作品</div>;
 
-  if (nav === '设定') return <SettingsPage projectId={project.id} />;
+  if (nav === '设定')
+    return <SettingsPage projectId={project.id} focusSettingId={focusSettingId} />;
   if (nav === '大纲')
     return <OutlinePage projectId={project.id} onOpenChapter={onOpenChapter} />;
   if (nav === '正文')
     return <EditorPage projectId={project.id} focusChapterId={focusChapterId} />;
-  if (nav === '人物') return <CharactersPage projectId={project.id} />;
+  if (nav === '人物')
+    return <CharactersPage projectId={project.id} focusCharacterId={focusCharacterId} />;
   if (nav === '导出') return <ExportPage projectId={project.id} />;
-  if (nav === '素材') return <AssetsPage projectId={project.id} />;
+  if (nav === '素材') return <AssetsPage projectId={project.id} focusAssetId={focusAssetId} />;
   if (nav === 'AI 讨论') return <AiPage projectId={project.id} />;
   if (nav === '封面工坊') return <CoversPage projectId={project.id} />;
-  if (nav === '图谱') return <GraphPage projectId={project.id} />;
+  if (nav === '图谱') return <GraphPage projectId={project.id} onNavigate={onGraphNavigate} />;
   if (nav === '节奏') return <StrandPage projectId={project.id} />;
   if (nav === '概览') return <Overview projectId={project.id} />;
 

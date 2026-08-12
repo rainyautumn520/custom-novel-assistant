@@ -10,7 +10,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   faction: '势力',
 };
 
-export default function SettingsPage({ projectId }: { projectId: string }) {
+export default function SettingsPage({
+  projectId,
+  focusSettingId = null,
+}: {
+  projectId: string;
+  focusSettingId?: string | null;
+}) {
   const [categories, setCategories] = useState<SettingCategory[]>([]);
   const [settings, setSettings] = useState<Setting[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -31,6 +37,10 @@ export default function SettingsPage({ projectId }: { projectId: string }) {
   useEffect(() => {
     void load().catch((e) => setError(String(e)));
   }, [load]);
+
+  useEffect(() => {
+    if (focusSettingId) setSelectedId(focusSettingId);
+  }, [focusSettingId]);
 
   const selected = useMemo(
     () => settings.find((s) => s.id === selectedId) ?? null,

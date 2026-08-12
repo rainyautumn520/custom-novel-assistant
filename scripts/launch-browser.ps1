@@ -1,4 +1,4 @@
-# AI Novel IDE 浏览器模式启动器
+﻿# AI Novel IDE 浏览器模式启动器
 # 用法：双击桌面快捷方式，或在 PowerShell 中执行本脚本
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -29,7 +29,7 @@ if (-not (Test-Port 8000)) {
 
 # 2. 前端
 if (-not (Test-Port 5173)) {
-    if (Test-Path $Node -and (Test-Path $ViteJs)) {
+    if ((Test-Path $Node) -and (Test-Path $ViteJs)) {
         Start-Process -FilePath $Node -ArgumentList $ViteJs `
             -WorkingDirectory $DesktopDir -WindowStyle Hidden
         Write-Host '[frontend] 启动中...' -ForegroundColor Cyan

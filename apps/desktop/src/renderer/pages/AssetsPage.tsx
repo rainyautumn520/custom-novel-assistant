@@ -3,7 +3,13 @@ import type { Asset } from '@ai-novel-ide/shared-types';
 
 import { api } from '../api';
 
-export default function AssetsPage({ projectId }: { projectId: string }) {
+export default function AssetsPage({
+  projectId,
+  focusAssetId = null,
+}: {
+  projectId: string;
+  focusAssetId?: string | null;
+}) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -17,6 +23,10 @@ export default function AssetsPage({ projectId }: { projectId: string }) {
   useEffect(() => {
     void load().catch((e) => setError(String(e)));
   }, [load]);
+
+  useEffect(() => {
+    if (focusAssetId) setSelectedId(focusAssetId);
+  }, [focusAssetId]);
 
   const selected = useMemo(
     () => assets.find((a) => a.id === selectedId) ?? null,

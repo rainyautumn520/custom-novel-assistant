@@ -17,3 +17,31 @@ def test_character_setting_links(client):
     replaced = client.put(links_url, json={"settingIds": [s2["id"]]}).json()
     assert len(replaced) == 1
     assert replaced[0]["targetId"] == s2["id"]
+
+
+def test_generic_link_create_delete(client):
+    project = client.post("/api/projects", json={"name": "通用关系测试书"}).json()
+    characters = f"/api/projects/{project['id']}/characters"
+    settings = f"/api/projects/{project['id']}/settings"
+    a = client.post(characters, json={"name": "林晚"}).json()
+    b = client.post(characters, json={"name": "张小凡"}).json()
+    s = client.post(settings, json={"title": "灵气复苏"}).json()
+
+    created = client.post(
+        f"/api/projects/{project['id']}/links",
+        json={"sourceType": "character", "sourceId": a["id"], "targetType": "setting", "targetId": s["id"]},
+    )
+    assert created.status_code == 201
+    link = created.json()
+    assert link["sourceType"] == "character"
+
+    # 重复创建返回同一关系
+    again = client.post(
+        f"/api/projects/{project['id']}/links",
+        json={"sourceType": "character", "sourceId": a["id"], "targetType": "setting", "targetId": s["id"]},
+    )
+    assert again.status_code == 201
+    assert again.json()["id"] == link["id"]
+
+    assert client.delete(f"/api/projects/{project['id']}/links/{link['id']}").status_code == 204
+    assert len(client.get(f"/api/projects/{project['id']}/links").json()) == 0

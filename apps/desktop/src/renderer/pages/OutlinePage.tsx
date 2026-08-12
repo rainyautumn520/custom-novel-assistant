@@ -10,6 +10,56 @@ const LEVEL_LABEL: Record<string, string> = {
   beat: '细纲',
 };
 
+const CN_DIGITS: Record<string, number> = {
+  零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9,
+};
+const CN_UNITS: Record<string, number> = {
+  十: 10, 百: 100, 千: 1000, 万: 10000, 亿: 100000000,
+};
+
+export function parseWordCount(text: string): number | null {
+  const s = text.trim();
+  if (!s) return 0;
+  const pure = s.replace(/[字个约]/g, '').trim();
+  if (/^[\d,]+$/.test(pure)) return parseInt(pure.replace(/,/g, ''), 10);
+  const kMatch = /^([\d.]+)\s*k$/i.exec(pure);
+  if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
+  const wanMatch = /^([\d.]+)\s*万$/.exec(pure);
+  if (wanMatch) return Math.round(parseFloat(wanMatch[1]) * 10000);
+  if (/[零一二两三四五六七八九十百千万亿]/.test(pure)) {
+    let total = 0;
+    let section = 0;
+    let num = 0;
+    let lastUnit = 0;
+    for (const ch of pure) {
+      if (ch in CN_DIGITS) {
+        num = CN_DIGITS[ch];
+      } else if (ch in CN_UNITS) {
+        const unit = CN_UNITS[ch];
+        if (unit === 10000 || unit === 100000000) {
+          section = (section + (num || 1)) * unit;
+          total += section;
+          section = 0;
+          num = 0;
+        } else {
+          section += (num || 1) * unit;
+          num = 0;
+        }
+        lastUnit = unit;
+      } else {
+        return null;
+      }
+    }
+    let result = total + section;
+    if (num > 0) {
+      // 口语省略：两千五 = 2500，二百五 = 250
+      result += lastUnit > 10 ? num * (lastUnit / 10) : num;
+    }
+    return result > 0 ? result : null;
+  }
+  return null;
+}
+
 export default function OutlinePage({
   projectId,
   onOpenChapter,
@@ -307,12 +357,19 @@ function OutlineEditor({
   };
 
   const handleSave = async () => {
+    const parsed = parseWordCount(targetWords);
+    if (parsed === null) {
+      window.alert(
+        `无法识别目标字数「${targetWords}」，支持 2500、2,500、1万、两千五 等写法`,
+      );
+      return;
+    }
     await onSave({
       title,
       goal,
       mustCover: mustCover.split('\n').map((x) => x.trim()).filter(Boolean),
       forbidden: forbidden.split('\n').map((x) => x.trim()).filter(Boolean),
-      targetWords: Number(targetWords) || 0,
+      targetWords: parsed,
       status,
       strands,
     });
@@ -357,9 +414,11 @@ function OutlineEditor({
         <div className="field">
           <label>目标字数</label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={targetWords}
             onChange={(e) => setTargetWords(e.target.value)}
+            placeholder="如 2500 或 两千五"
           />
         </div>
         <div className="field">

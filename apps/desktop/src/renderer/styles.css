@@ -793,3 +793,90 @@ input { font: inherit; color: inherit; }
 .md-editor-textarea { min-height: 320px; }
 .editor-head { margin-bottom: 18px; }
 .editor-actions { margin-top: 18px; padding-top: 4px; }
+
+/* ---------- AI 讨论：宽松布局 ---------- */
+.ai-sessions {
+  width: 260px;
+  flex: 0 0 260px;
+  padding: 14px 12px;
+}
+.ai-chat { min-height: 0; }
+.ai-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 32px;
+}
+.ai-messages .list-empty {
+  margin: auto;
+  padding: 40px 20px;
+  font-size: 14px;
+  text-align: center;
+}
+.ai-msg {
+  max-width: 820px;
+  gap: 6px;
+}
+.ai-msg .ai-role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.ai-msg .ai-role::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.ai-msg.user .ai-role::before { background: var(--accent); }
+.ai-msg.assistant .ai-role::before { background: var(--info); }
+.ai-content {
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.ai-input-row {
+  padding: 14px 22px;
+  gap: 12px;
+}
+.ai-input-row input {
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: border-color .12s ease;
+}
+.ai-input-row input:focus { border-color: var(--accent); }
+.ai-input-row .btn { padding: 11px 20px; }
+
+.prompt-panel {
+  margin: 0 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  background: rgba(124,111,240,.05);
+}
+.prompt-panel .prompt-box {
+  min-height: 90px;
+  font-size: 13px;
+}
+.prompt-panel .btn { align-self: flex-end; }
+
+.ai-session { align-items: flex-start; }
+.ai-session-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ai-session-time {
+  font-size: 11px;
+  color: var(--text-3);
+}

@@ -14,6 +14,7 @@ export default function AiPage({ projectId }: { projectId: string }) {
   const [adopt, setAdopt] = useState<string | null>(null);
   const [categories, setCategories] = useState<SettingCategory[]>([]);
   const [rag, setRag] = useState<{ backend: string; count: number } | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   const loadSessions = useCallback(async () => {
     const list = await api.listAiSessions(projectId);
@@ -99,6 +100,9 @@ export default function AiPage({ projectId }: { projectId: string }) {
       <div className="page-head">
         <h1>AI 设定讨论</h1>
         <div className="spacer" />
+        <button className="btn ghost" onClick={() => setShowPrompt((v) => !v)}>
+          {showPrompt ? '收起提示词' : '作品提示词'}
+        </button>
         {rag && (
           <span className="rag-status">
             {rag.count > 0 ? `向量库 ${rag.count} 片段` : '向量库未建立'}
@@ -112,16 +116,36 @@ export default function AiPage({ projectId }: { projectId: string }) {
 
       {error && <div className="page-error">{error}</div>}
 
+      {showPrompt && (
+        <div className="prompt-panel">
+          <textarea
+            className="prompt-box"
+            placeholder="作品级提示词/文风要求（可选）：例如「文风偏古龙，多用短句」…"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <button
+            className="btn ghost"
+            onClick={() => void api.setAiPrompt(projectId, prompt).then(() => setError(''))}
+          >
+            保存提示词
+          </button>
+        </div>
+      )}
+
       <div className="ai-layout">
         <div className="ai-sessions">
           {sessions.length === 0 && <div className="list-empty">还没有会话</div>}
           {sessions.map((s) => (
             <div
               key={s.id}
-              className={`tree-item ${s.id === sessionId ? 'active' : ''}`}
+              className={`tree-item ai-session ${s.id === sessionId ? 'active' : ''}`}
               onClick={() => setSessionId(s.id)}
             >
-              <span className="tree-title">{s.title}</span>
+              <div className="ai-session-main">
+                <span className="tree-title">{s.title}</span>
+                <span className="ai-session-time">{new Date(s.updatedAt).toLocaleString()}</span>
+              </div>
               <button
                 className="icon-btn"
                 title="删除会话"
@@ -138,20 +162,6 @@ export default function AiPage({ projectId }: { projectId: string }) {
               </button>
             </div>
           ))}
-          <div className="tree-add">
-            <textarea
-              className="prompt-box"
-              placeholder="作品级提示词/文风要求（可选）…"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <button
-              className="btn ghost"
-              onClick={() => void api.setAiPrompt(projectId, prompt).then(() => setError(''))}
-            >
-              保存提示词
-            </button>
-          </div>
         </div>
 
         <div className="ai-chat">

@@ -140,41 +140,86 @@ function Home({
   onCreate: () => void;
   onOpen: (p: Project) => void;
 }) {
+  const latest = projects[0] ?? null;
   return (
-    <div className="page-pad">
-      <h1>继续创作</h1>
-      <p className="muted">你的作品都保存在本机。</p>
-
-      <div className="create-box">
-        <input
-          placeholder="书名（必填）"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onCreate()}
-        />
-        <button className="btn primary" onClick={onCreate}>
-          ＋ 新建作品
-        </button>
+    <div className="home">
+      <div className="home-hero">
+        <div className="home-glow" />
+        <div className="home-grid-bg" />
+        <div className="home-hero-inner">
+          <p className="home-eyebrow">AI NOVEL IDE</p>
+          <h1 className="home-title">
+            把脑中的世界，
+            <br />
+            写成<span className="home-title-accent">百章长卷</span>
+          </h1>
+          <p className="home-sub">设定 · 人物 · 大纲 · 正文，一处管理，AI 陪你写到结局。</p>
+        </div>
       </div>
 
-      <h2>最近作品</h2>
-      {projects.length === 0 ? (
-        <div className="empty">
-          <p>还没有作品，输入书名创建第一个。</p>
-        </div>
-      ) : (
-        <div className="cards">
-          {projects.map((p) => (
-            <button key={p.id} className="card" onClick={() => onOpen(p)}>
-              <div className="cover" />
-              <div className="name">{p.name}</div>
-              <div className="sub">
-                {p.genre || '未设置题材'} · {p.targetWords.toLocaleString()} 字
-              </div>
-            </button>
-          ))}
-        </div>
+      {latest && (
+        <button className="continue-card" onClick={() => onOpen(latest)}>
+          <div className="continue-cover">
+            <span className="continue-glyph">书</span>
+          </div>
+          <div className="continue-meta">
+            <span className="continue-label">继续写作</span>
+            <span className="continue-title">{latest.name}</span>
+            <span className="continue-sub">
+              {latest.genre || '未设置题材'} · {latest.targetWords.toLocaleString()} 字目标
+            </span>
+            <div className="progress">
+              <div className="progress-fill" style={{ width: '0%' }} />
+            </div>
+          </div>
+          <span className="continue-action">继续 →</span>
+        </button>
       )}
+
+      <div className="home-section">
+        <div className="home-section-head">
+          <h2>最近作品</h2>
+          {projects.length > 0 && <span className="muted">{projects.length} 部作品</span>}
+        </div>
+        {projects.length === 0 ? (
+          <div className="empty empty-fancy">
+            <span className="empty-glyph">✦</span>
+            <p>还没有作品，写下第一本书的名字，故事从这里开始。</p>
+          </div>
+        ) : (
+          <div className="cards">
+            {projects.map((p, i) => (
+              <button key={p.id} className="card" onClick={() => onOpen(p)}>
+                <div className={`cover cover-${i % 5}`}>
+                  <span className="cover-glyph">书</span>
+                </div>
+                <div className="name">{p.name}</div>
+                <div className="sub">
+                  {p.genre || '未设置题材'} · {p.targetWords.toLocaleString()} 字
+                </div>
+              </button>
+            ))}
+            <button className="card new-card" onClick={() => document.querySelector<HTMLInputElement>('.create-box input')?.focus()}>
+              <div className="new-plus">＋</div>
+              <div className="name">新建作品</div>
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="home-section">
+        <div className="create-box">
+          <input
+            placeholder="输入书名，开始一段新故事…"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onCreate()}
+          />
+          <button className="btn primary" onClick={onCreate}>
+            开始创作
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

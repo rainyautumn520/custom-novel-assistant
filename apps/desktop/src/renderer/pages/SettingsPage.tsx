@@ -186,7 +186,10 @@ export default function SettingsPage({ projectId }: { projectId: string }) {
               className={`list-row ${s.id === selectedId ? 'active' : ''}`}
               onClick={() => setSelectedId(s.id)}
             >
-              <span className="title">{s.title}</span>
+              <div className="list-main">
+                <span className="title">{s.title}</span>
+                <span className="sub">{s.contentMd.slice(0, 36) || '（还没有内容）'}</span>
+              </div>
               <span className={`tag ${s.status === 'confirmed' ? 'confirmed' : 'draft'}`}>
                 {s.status === 'confirmed' ? '已确认' : '草稿'}
               </span>
@@ -264,7 +267,7 @@ function SettingEditor({
         </span>
       </div>
 
-      <div className="field-row">
+      <div className="field-grid">
         <div className="field">
           <label>分类</label>
           <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); markDirty(); }}>

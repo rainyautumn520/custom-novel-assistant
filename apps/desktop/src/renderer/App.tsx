@@ -52,13 +52,25 @@ export default function App() {
       }
   };
 
+  const goHome = () => {
+    setView('home');
+    setSelected(null);
+    setActiveNav('概览');
+    setFocusChapterId(null);
+  };
+
   return (
     <div className="app">
       <header className="topbar">
-        <button className="logo" onClick={() => setView('home')}>
+        <button className="logo" onClick={goHome} title="返回主页">
           <span className="logo-mark">书</span>
           <span>AI Novel IDE</span>
         </button>
+        {view === 'workspace' && selected && (
+          <button className="back-home" onClick={goHome}>
+            ← 返回主页
+          </button>
+        )}
         {selected && (
           <button className="project-switch" onClick={() => setView('workspace')}>
             {selected.name} ▾
@@ -89,30 +101,32 @@ export default function App() {
         )}
 
         <main className="main">
-          {view === 'home' ? (
-            <Home
-              name={name}
-              setName={setName}
-              projects={projects}
-              onCreate={createProject}
-              onOpen={(p) => {
-                setSelected(p);
-                setActiveNav('概览');
-                setFocusChapterId(null);
-                setView('workspace');
-              }}
-            />
-          ) : (
-            <Workspace
-              project={selected}
-              nav={activeNav}
-              focusChapterId={focusChapterId}
-              onOpenChapter={(id) => {
-                setFocusChapterId(id);
-                setActiveNav('正文');
-              }}
-            />
-          )}
+          <div key={view} className="view-enter">
+            {view === 'home' ? (
+              <Home
+                name={name}
+                setName={setName}
+                projects={projects}
+                onCreate={createProject}
+                onOpen={(p) => {
+                  setSelected(p);
+                  setActiveNav('概览');
+                  setFocusChapterId(null);
+                  setView('workspace');
+                }}
+              />
+            ) : (
+              <Workspace
+                project={selected}
+                nav={activeNav}
+                focusChapterId={focusChapterId}
+                onOpenChapter={(id) => {
+                  setFocusChapterId(id);
+                  setActiveNav('正文');
+                }}
+              />
+            )}
+          </div>
         </main>
       </div>
 

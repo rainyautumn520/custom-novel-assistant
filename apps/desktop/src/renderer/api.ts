@@ -82,6 +82,13 @@ export interface DoctorData {
   checks: { id: string; label: string; status: string; detail: string }[];
 }
 
+export interface SearchResult {
+  type: string;
+  id: string;
+  title: string;
+  snippet: string;
+}
+
 export interface ChapterDetailWithIntegrity extends ChapterDetail {
   fileIntegrity: string;
 }
@@ -370,4 +377,9 @@ export const api = {
   deleteChekhov: (pid: string, id: string) =>
     request<void>(`/api/projects/${pid}/chekhovs/${id}`, { method: 'DELETE' }),
   getDoctor: (pid: string) => request<DoctorData>(`/api/projects/${pid}/doctor`),
+  searchProject: (pid: string, query: string) =>
+    request<SearchResult[]>(`/api/projects/${pid}/search`, {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+    }),
 };

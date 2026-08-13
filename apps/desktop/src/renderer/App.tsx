@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Project } from '@ai-novel-ide/shared-types';
 
 import { api } from './api';
@@ -12,7 +12,7 @@ import OutlinePage from './pages/OutlinePage';
 import AssetsPage from './pages/AssetsPage';
 import SettingsPage from './pages/SettingsPage';
 import StrandPage from './pages/StrandPage';
-import type { DoctorData, RhythmData } from './api';
+import type { DoctorData, RhythmData, SearchResult } from './api';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
 
@@ -22,6 +22,13 @@ const NAV_ITEMS = [
   '概览', '设定', '人物', '大纲', '正文', '素材', '导出',
   'AI 讨论', '封面工坊', '图谱', '节奏',
 ];
+
+const SEARCH_TYPE_LABEL: Record<string, string> = {
+  setting: '设定',
+  character: '人物',
+  chapter: '章节',
+  asset: '素材',
+};
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -34,6 +41,10 @@ export default function App() {
   const [focusSettingId, setFocusSettingId] = useState<string | null>(null);
   const [focusCharacterId, setFocusCharacterId] = useState<string | null>(null);
   const [focusAssetId, setFocusAssetId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchTimer = useRef<number | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
@@ -84,6 +95,32 @@ export default function App() {
     }
   };
 
+  const runSearch = (q: string) => {
+    setSearchQuery(q);
+    if (!selected || !q.trim()) {
+      setSearchResults(null);
+      setSearchOpen(false);
+      return;
+    }
+    if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    searchTimer.current = window.setTimeout(() => {
+      void api
+        .searchProject(selected.id, q.trim())
+        .then((items) => {
+          setSearchResults(items);
+          setSearchOpen(true);
+        })
+        .catch(() => setSearchResults([]));
+    }, 300);
+  };
+
+  const openSearchResult = (type: string, id: string) => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults(null);
+    graphNavigate(type, id);
+  };
+
   return (
     <div className="app">
       <header className="topbar">
@@ -101,7 +138,42 @@ export default function App() {
             {selected.name} ▾
           </button>
         )}
-        <div className="search">⌕ 搜索设定、人物、章节…</div>
+        <div className="search">
+          <span>⌕</span>
+          <input
+            placeholder={selected ? '搜索设定、人物、章节、正文…' : '进入作品后可搜索'}
+            value={searchQuery}
+            onChange={(e) => runSearch(e.target.value)}
+            onFocus={() => searchResults && searchResults.length > 0 && setSearchOpen(true)}
+            onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setSearchOpen(false);
+              if (e.key === 'Enter') setSearchOpen(true);
+            }}
+          />
+          {searchOpen && searchResults && (
+            <div className="search-dropdown">
+              {searchResults.length === 0 ? (
+                <div className="search-empty">没有匹配结果</div>
+              ) : (
+                searchResults.map((r, i) => (
+                  <button
+                    key={`${r.type}-${r.id}-${i}`}
+                    className="search-item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => openSearchResult(r.type, r.id)}
+                  >
+                    <span className={`tag search-tag`}>{SEARCH_TYPE_LABEL[r.type] ?? r.type}</span>
+                    <span className="search-main">
+                      <span className="search-title">{r.title}</span>
+                      {r.snippet && <span className="search-snippet">{r.snippet}</span>}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         <div className="spacer" />
         <span className={`backend backend-${backend}`}>
           {backend === 'checking' && '连接后端…'}

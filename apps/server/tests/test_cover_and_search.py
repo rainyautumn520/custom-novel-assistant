@@ -76,6 +76,22 @@ def test_search_and_links(client):
     assert "灵气复苏" in titles
     assert "北境笔记" in titles
 
+    # 章节标题与正文搜索
+    outline = f"/api/projects/{pid}/outline"
+    volume = client.post(outline, json={"level": "volume", "title": "第一卷"}).json()
+    node = client.post(
+        outline, json={"level": "chapter", "title": "灵脉之夜", "parent_id": volume["id"]}
+    ).json()
+    chapter = client.post(f"{outline}/{node['id']}/create-chapter").json()
+    client.put(
+        f"/api/projects/{pid}/chapters/{chapter['id']}",
+        json={"contentMd": "夜色里，北境的灵脉微微发光。"},
+    )
+    result2 = client.post(f"/api/projects/{pid}/search", json={"query": "灵脉之夜"}).json()
+    assert any(item["type"] == "chapter" and item["title"] == "灵脉之夜" for item in result2)
+    result3 = client.post(f"/api/projects/{pid}/search", json={"query": "微微发光"}).json()
+    assert any(item["type"] == "chapter" and item["id"] == chapter["id"] for item in result3)
+
     client.put(f"/api/projects/{pid}/characters/{c['id']}/links", json={"settingIds": [s["id"]]})
     links = client.get(f"/api/projects/{pid}/links").json()
     assert len(links) == 1

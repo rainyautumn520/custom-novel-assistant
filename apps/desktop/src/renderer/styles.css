@@ -909,3 +909,70 @@ input:focus, textarea:focus, select:focus {
 .write-textarea { transition: background .15s ease; }
 .write-textarea:focus { background: #1e1e25; }
 .write-area { border-left: 1px solid var(--border); }
+
+/* ---------- 全局搜索 ---------- */
+.topbar { position: relative; }
+.search { position: relative; padding: 5px 10px; transition: border-color .12s ease; }
+.search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+}
+.search input::placeholder { color: var(--text-3); }
+.search:focus-within { border-color: var(--accent); }
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.45);
+  max-height: 360px;
+  overflow: auto;
+  padding: 6px;
+}
+.search-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+.search-item:hover { background: var(--hover); }
+.search-tag { flex: 0 0 auto; }
+.search-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.search-title {
+  color: var(--text);
+  font-size: 13.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-snippet {
+  color: var(--text-3);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+}

@@ -1,7 +1,8 @@
 from sqlalchemy import String, or_, select
 
-from app.core.database import project_session
+from app.core.database import project_db_path, project_session
 from app.models.asset import Asset
+from app.models.chapter import Chapter
 from app.models.character import Character
 from app.models.world import Setting
 
@@ -63,4 +64,32 @@ def search(project_id: str, query: str) -> list[dict]:
                     "snippet": asset.content_md[:120],
                 }
             )
+        for chapter in session.scalars(
+            select(Chapter).where(Chapter.title.ilike(f"%{q}%"))
+        ):
+            results.append(
+                {
+                    "type": "chapter",
+                    "id": chapter.id,
+                    "title": chapter.title,
+                    "snippet": f"章节 · {chapter.word_count} 字",
+                }
+            )
+        # 正文内容搜索（读文件，命中则给出所在章节）
+        for chapter in session.scalars(select(Chapter)):
+            path = project_db_path(project_id).parent / chapter.file_path
+            if not path.exists():
+                continue
+            content = path.read_text(encoding="utf-8")
+            if q in content.lower():
+                index = content.lower().find(q)
+                snippet = content[max(0, index - 30) : index + 60].replace("\n", " ")
+                results.append(
+                    {
+                        "type": "chapter",
+                        "id": chapter.id,
+                        "title": chapter.title,
+                        "snippet": f"…{snippet}…",
+                    }
+                )
     return results

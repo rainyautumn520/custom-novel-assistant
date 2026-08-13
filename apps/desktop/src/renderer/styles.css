@@ -892,3 +892,20 @@ input { font: inherit; color: inherit; }
 }
 .graph-info { color: var(--text-2); font-size: 13px; }
 .graph-hint { color: var(--text-3); font-size: 12px; }
+
+/* ---------- 前端打磨：全局状态与可达性 ---------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.btn {
+  transition: background .12s ease, border-color .12s ease, color .12s ease, transform .08s ease;
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+.write-textarea { transition: background .15s ease; }
+.write-textarea:focus { background: #1e1e25; }
+.write-area { border-left: 1px solid var(--border); }

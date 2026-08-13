@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
-from app.core.database import new_id, project_session
+from app.core.database import new_id, project_db_path, project_session
+from app.core.text_utils import sha256_hex
 from app.models.chapter import Chapter
 from app.models.outline import OutlineNode
 
@@ -192,4 +193,16 @@ def create_chapter_from_node(project_id: str, node_id: str) -> Chapter:
         node.chapter_id = chapter.id
         session.commit()
         session.refresh(chapter)
+        # 创建章节正文空文件，保证文件系统与数据库一致
+        root = project_db_path(project_id).parent
+        file_path = root / chapter.file_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        if not file_path.exists():
+            file_path.write_text("", encoding="utf-8")
+            chapter.file_hash = sha256_hex("")
+            with project_session(project_id) as session:
+                current = session.get(Chapter, chapter.id)
+                if current:
+                    current.file_hash = chapter.file_hash
+                    session.commit()
         return chapter

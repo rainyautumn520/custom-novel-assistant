@@ -92,9 +92,8 @@ def preview_book(project_id: str) -> dict[str, Any]:
                     }
                 )
                 continue
-            content = (project_db_path(project_id).parent / chapter.file_path).read_text(
-                encoding="utf-8"
-            )
+            chapter_file = project_db_path(project_id).parent / chapter.file_path
+            content = chapter_file.read_text(encoding="utf-8") if chapter_file.exists() else ""
             words = count_words(content)
             total_words += words
             items.append(
@@ -152,9 +151,8 @@ def export_book(
             if chapter is None:
                 skipped_titles.append(node.title)
                 continue
-            content = (project_db_path(project_id).parent / chapter.file_path).read_text(
-                encoding="utf-8"
-            )
+            chapter_file = project_db_path(project_id).parent / chapter.file_path
+            content = chapter_file.read_text(encoding="utf-8") if chapter_file.exists() else ""
             if include_chapter:
                 parts.append(chapter.title)
                 parts.append("")

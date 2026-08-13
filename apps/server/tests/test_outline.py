@@ -50,6 +50,11 @@ def test_create_chapter_from_chapter_node(client):
     # 再次调用返回同一章节
     again = client.post(f"{base}/{chapter_node['id']}/create-chapter").json()
     assert again["id"] == chapter["id"]
+    # 正文文件应存在
+    from pathlib import Path
+
+    file_path = Path(project["dataDir"]) / chapter["filePath"]
+    assert file_path.exists()
 
 
 def test_outline_drag_move(client):
